@@ -1,0 +1,1 @@
+/usr/bin/c++  -g   CMakeFiles/caralibro.dir/main.cpp.o CMakeFiles/caralibro.dir/ppmloader/ppmloader.cpp.o CMakeFiles/caralibro.dir/utils.cpp.o CMakeFiles/caralibro.dir/Model.cpp.o  -o caralibro 
