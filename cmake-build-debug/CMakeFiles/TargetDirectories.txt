@@ -1,3 +1,0 @@
-/home/mike/facu/metodos/tps/archivos_tp2/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/home/mike/facu/metodos/tps/archivos_tp2/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/mike/facu/metodos/tps/archivos_tp2/cmake-build-debug/CMakeFiles/caralibro.dir
