@@ -4,6 +4,7 @@
 CMakeFiles/caralibro.dir/Model.cpp.o: ../Model.cpp
 CMakeFiles/caralibro.dir/Model.cpp.o: ../Model.h
 CMakeFiles/caralibro.dir/Model.cpp.o: ../ppmloader/ppmloader.h
+CMakeFiles/caralibro.dir/Model.cpp.o: ../utils.h
 
 CMakeFiles/caralibro.dir/main.cpp.o: ../Model.h
 CMakeFiles/caralibro.dir/main.cpp.o: ../main.cpp

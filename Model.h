@@ -18,7 +18,7 @@ typedef enum {
     PCAWITHKNN =1
 } MODE;
 
-typedef vector<uchar*> Dataset;
+typedef vector<pair<uchar*,int>> Dataset;
 
 class Model {
 

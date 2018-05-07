@@ -9,6 +9,8 @@
 /home/mike/facu/metodos/tps/archivos_tp2/Model.cpp
 Model.h
 /home/mike/facu/metodos/tps/archivos_tp2/Model.h
+utils.h
+/home/mike/facu/metodos/tps/archivos_tp2/utils.h
 
 /home/mike/facu/metodos/tps/archivos_tp2/Model.h
 fstream
@@ -52,5 +54,7 @@ utils.h
 ppmloader/ppmloader.h
 /home/mike/facu/metodos/tps/archivos_tp2/ppmloader/ppmloader.h
 iostream
+-
+vector
 -
 

@@ -3,9 +3,18 @@
 //
 
 #include "Model.h"
+#include "utils.h"
 
 void Model::evaluate(const char *testDataseName) {
+    ifstream input(testDataseName);
 
+    if(mode == SIMPLEKNN){
+        //ACA HABRIA QUE LLAMAR AL CODIGO DE GONZA
+        //las imagenes de training estan guardadas en la propiedad dataset
+
+        //Habria que hacer algo como foreach image in test set, run:
+        //kNearestNeighbors();
+    }
 }
 
 Model::Model(MODE mode) : mode(mode) {
@@ -41,6 +50,7 @@ void Model::loadDataset() {
         assert(false);
     }
 
+    //Aca habria que hacer no solo te guardes la imagen,
     while (input.good()) {
         uchar *data = NULL;
         int width = 0, height = 0;
@@ -52,7 +62,13 @@ void Model::loadDataset() {
             throw std::runtime_error("test_load failed");
         }
 
-        images.push_back(data);
+
+        //ESTO HAY QUE CAMBIARLO POR CODIGO QUE TE DIGA LA CLASE O PERSONA A LA QUE PERTENECE LA IMAGEN
+        int clase = 1;
+
+
+        pair<uchar*, int> trainingInstance = make_pair(data, clase);
+        images.push_back(trainingInstance);
     }
 
 

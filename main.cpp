@@ -16,32 +16,40 @@ int main(int argc, char *argv[]) {
   test_save();
   test_image();
 
+//    ASI SE USA, HAY QUE HACER QUE LEA FLAGS SIN IMPORTAR EL ORDEN
 //    $ ./tp2 -m 1 -i train.csv -q test.csv -o result.csv
 
+
+    //ESTO ES CODIGO DEL TP PASADO QUE ME AYUDA A SABER COMO CARGAR ARCHIVOS PARA LEER Y ESCRIBIR
 //    ifstream input(argv[1]);
 //    ofstream resultsFile;
 //    ofstream timeFile;
 //    resultsFile.open("../experimentacion/results/results.out");
 //    timeFile.open("../experimentacion/results/time",std::ios_base::app);
 
-//    if (!input->good()) {
-//        cout << "The input file isn't good";
-//        assert(false);
-//    }
-//
-//    *(input) >> totalPages >> totalLinks;
 
 
-    Model simpleKnn(static_cast<MODE>(0));
+    //Creamos una instancia de nuestra clase model y la instanciamos en modo SIMPLEKNN
+    //Puede ser eso o PCAWITHKNN
+    Model simpleKnn(SIMPLEKNN);
 
-    simpleKnn.setAlpha(5);
+
+//   Descomentar esto solo en PCA
+//    simpleKnn.setAlpha(5);
+
+
     simpleKnn.setK(10);
 
+
+//    Le pasamos la direccion al dataset de training
     simpleKnn.train("path/to/train.csv");
 
 
+//    Evaluamos los tests y el modelo se guarda adentro los resultados
     simpleKnn.evaluate("test.csv");
 
+
+//    Le pasamos el archivo donde guardarlos
     simpleKnn.outputResults("path/to/results.csv");
 
 
