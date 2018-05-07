@@ -1,22 +1,12 @@
 #include "methods.h"
 
-vector<vector<int>> createTrainMatrix(string trainFaces) {
 
 
-}
-
-
-vector<int> getPeople(string trainFaces) {
-
-
-}
-
-
-int kNearestNeighbors(vector <vector <int> > trainMatrix, vector<int> people, vector<int> newFace, int k) {
+int imageMatrix::kNearestNeighbors(const vector<uchar*> &newFace, int k) {
     vector< pair <int, int> > distances;
 
-    for (int i = 0; i < trainMatrix.size(); ++i) {
-        pair<int, int> dist (getSquaredNorm(trainMatrix[i], newFace), people[i]);
+    for (int i = 0; i < faceMatrix.size(); ++i) {
+        pair<int, int> dist (getSquaredNorm(faceMatrix[i], newFace), people[i]);
         distances.push_back(dist);
     }
 
@@ -41,15 +31,15 @@ int kNearestNeighbors(vector <vector <int> > trainMatrix, vector<int> people, ve
 }
 
 
-int getSquaredNorm(vector<int> v1,vector<int> v2) {
+int imageMatrix::getSquaredNorm(const vector<uchar*> &v1,const vector<uchar*> &v2) {
     int distance = 0;
 
     for (int i = 0; i < v1.size(); ++i) {
-        distance += ((v1[i] - v2[i]) ^ 2);
+        distance += ((int)v1[i] - (int)v2[i]) ^ 2;  //Cuidado que la resta de uchar puede dar cualquier cosa.
     }
 
     return distance;
 }
 
 
-bool pairCompare(pair<int, int> i, pair<int, int> j) { return (i.first < j.first); }
+bool imageMatrix::pairCompare(pair<uchar*, int> i, pair<uchar*, int> j) { return (i.first < j.first); }
