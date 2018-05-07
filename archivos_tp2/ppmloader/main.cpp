@@ -32,7 +32,7 @@ void read_image(std::string filename, uchar** data, int* width, int* height){
 void test_image(){
   uchar* data = NULL;
   int width = 0, height = 0;
-  std::string filename = "prueba.ppm";
+  std::string filename = "../archivos_tp2/ppmloader/prueba.ppm";
   read_image(filename, &data, &width, &height); // Ejemplo de llamada
 
   for (int h = 0; h < height; ++h){
@@ -50,7 +50,7 @@ void test_load(){
   int width = 0, height = 0;
   PPM_LOADER_PIXEL_TYPE pt = PPM_LOADER_PIXEL_TYPE_INVALID;
 //  std::string filename = "buda.0.ppm";
-  std::string filename = "prueba.ppm";
+  std::string filename = "../archivos_tp2/ppmloader/prueba.ppm";
 
   bool ret = LoadPPMFile(&data, &width, &height, &pt, filename.c_str());
   if (!ret || width == 0|| height == 0|| pt!=PPM_LOADER_PIXEL_TYPE_RGB_8B)
@@ -71,7 +71,7 @@ void test_save(){
   data[0] = data[1] = data[2] = 100; // RGB
   data[3] = data[4] = data[5] = 150; // RGB
   data[6] = data[7] = data[8] = 245; // RGB
-  std::string filename = "prueba.ppm";
+  std::string filename = "../archivos_tp2/ppmloader/prueba.ppm";
 
   bool ret = SavePPMFile(filename.c_str(),data,width,height,PPM_LOADER_PIXEL_TYPE_RGB_8B, comments);
   if (!ret)
