@@ -14,9 +14,10 @@ void Model::evaluate(const char *testDatasetName) {
     vector<int> people;
 
     if(mode == SIMPLEKNN){
+        assert(_k <= images.size());
         for (int i = 0; i < testSet.size(); ++i) {
             people.push_back(kNearestNeighbors(testSet[i].first));
-            cout << people[i];
+            cout << people[i] << " ";
         }
         cout << endl;
     }
@@ -119,7 +120,7 @@ int getSquaredNorm(uchar* &v1, uchar* &v2, int size) { //Qué onda con el const 
     int distance = 0;
 
     for (int i = 0; i <  size; ++i) {
-        distance += (((int)v1[i])^2 - ((int)v2[i])^ 2) ;
+        distance += pow((int)v1[i] - (int)v2[i], 2);
     }
     return distance;
 }

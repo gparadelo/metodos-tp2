@@ -37,12 +37,12 @@ int main(int argc, char *argv[]) {
         cout << "necesito: -i <train_set>";
         return 0;
     }
-/*
+
     if (!cmdOptionExists(argv, argv + argc, "-q")) {
         cout << "necesito: -q <train_set>";
         return 0;
     }
-*/
+
 
     char *method = getCmdOption(argv,argv + argc, "-m");
 
@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
 
     Model simpleKnn(mod);
     if (*method == 1) MODE mod = PCAWITHKNN;
-    simpleKnn.setK(10);
+    simpleKnn.setK(3);
 
 //    Le pasamos la direccion al dataset de training
 
@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
 
 
 //    Le pasamos el archivo donde guardarlos
-    simpleKnn.outputResults("path/to/results.csv");
+//  simpleKnn.outputResults("path/to/results.csv");
 
 
     return 0;
