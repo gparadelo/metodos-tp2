@@ -42,6 +42,7 @@ int main(int argc, char *argv[]) {
 
 
 //    Le pasamos la direccion al dataset de training
+
     simpleKnn.train("path/to/train.csv");
 
 

@@ -5,8 +5,8 @@
 #include "Model.h"
 #include "utils.h"
 
-void Model::evaluate(const char *testDataseName) {
-    ifstream input(testDataseName);
+void Model::evaluate(const char *testDatasetName) {
+    ifstream input(testDatasetName);
 
     if(mode == SIMPLEKNN){
         //ACA HABRIA QUE LLAMAR AL CODIGO DE GONZA
@@ -22,10 +22,7 @@ Model::Model(MODE mode) : mode(mode) {
 }
 
 void Model::train(const char *trainDatasetName) {
-    trainDatasetName = trainDatasetName;
-
-    loadDataset();
-
+    loadDataset(trainDatasetName);
 
     if (mode == SIMPLEKNN) return;
 
@@ -35,14 +32,14 @@ void Model::train(const char *trainDatasetName) {
 }
 
 void Model::setAlpha(int alpha) {
-    alpha = alpha;
+    _alpha = alpha;
 }
 
-void Model::setK(int i) {
-    k = k;
+void Model::setK(int k) {
+    _k = k;
 }
 
-void Model::loadDataset() {
+void Model::loadDataset(const char *trainDatasetName) {
     ifstream input(trainDatasetName);
 
     if (!input.good()) {
@@ -55,23 +52,21 @@ void Model::loadDataset() {
         uchar *data = NULL;
         int width = 0, height = 0;
         PPM_LOADER_PIXEL_TYPE pt = PPM_LOADER_PIXEL_TYPE_INVALID;
-        std::string filename = "buda.0.ppm";
-        bool ret = LoadPPMFile(&data, &width, &height, &pt, filename.c_str());
+        char filename[256];
+        input.getline(filename, 256, ',');
+        bool ret = LoadPPMFile(&data, &width, &height, &pt, filename);
 
         if (!ret || width == 0 || height == 0 || pt != PPM_LOADER_PIXEL_TYPE_RGB_8B) {
             throw std::runtime_error("test_load failed");
         }
 
+        char stringClass[8];
+        input.getline(stringClass, 8, ',');
+        int intClass = stoi(stringClass);
 
-        //ESTO HAY QUE CAMBIARLO POR CODIGO QUE TE DIGA LA CLASE O PERSONA A LA QUE PERTENECE LA IMAGEN
-        int clase = 1;
-
-
-        pair<uchar*, int> trainingInstance = make_pair(data, clase);
+        pair<uchar*, int> trainingInstance = make_pair(data, intClass);
         images.push_back(trainingInstance);
     }
-
-
 }
 
 void Model::outputResults(const char *outputFileName) {

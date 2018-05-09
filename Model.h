@@ -37,11 +37,10 @@ public:
 
 private:
     MODE mode;
-    const char * trainDatasetName;
-    int alpha;
-    int k;
+    int _alpha;
+    int _k;
 
-    void loadDataset();
+    void loadDataset(const char *trainDatasetName);
 
     Dataset images;
 };
