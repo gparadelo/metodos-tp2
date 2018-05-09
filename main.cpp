@@ -1,5 +1,5 @@
 #include <iostream>
-#include "utils.h"
+#include "inutils.h"
 #include "Model.h"
 #include <fstream>
 #include <chrono>
@@ -27,66 +27,47 @@ bool cmdOptionExists(char **begin, char **end, const string &option) {
 
 
 int main(int argc, char *argv[]) {
-/*
-    test_load();
-    test_save();
-    test_image();
-*/
-//    ASI SE USA, HAY QUE HACER QUE LEA FLAGS SIN IMPORTAR EL ORDEN
-//    $ ./tp2 -m 1 -i train.csv -q test.csv -o result.csv
 
-/*
     if (!cmdOptionExists(argv, argv + argc, "-m")) {
         cout << "necesito: -m <method>";
         return 0;
     }
-*/
+
     if (!cmdOptionExists(argv, argv + argc, "-i")) {
         cout << "necesito: -i <train_set>";
         return 0;
     }
 /*
-    if (!cmdOptionExists(argv, argv + argc, "-1")) {
+    if (!cmdOptionExists(argv, argv + argc, "-q")) {
         cout << "necesito: -q <train_set>";
         return 0;
     }
 */
 
-    char *trainSetName = getCmdOption(argv, argv + argc, "-i") + 3;
+    char *method = getCmdOption(argv,argv + argc, "-m");
 
-//  char *testSetName = getCmdOption(argv, argv + argc, "-q") + 3;
+    char *trainSetName = getCmdOption(argv, argv + argc, "-i");
 
-
-
-
-    //ESTO ES CODIGO DEL TP PASADO QUE ME AYUDA A SABER COMO CARGAR ARCHIVOS PARA LEER Y ESCRIBIR
-//    ifstream input(argv[1]);
-//    ofstream resultsFile;
-//    ofstream timeFile;
-//    resultsFile.open("../experimentacion/results/results.out");
-//    timeFile.open("../experimentacion/results/time",std::ios_base::app);
-
-
+    char *testSetName = getCmdOption(argv, argv + argc, "-q");
 
     //Creamos una instancia de nuestra clase model y la instanciamos en modo SIMPLEKNN
     //Puede ser eso o PCAWITHKNN
-    Model simpleKnn(SIMPLEKNN);
+    MODE mod;
+    if (*method == 1) { mod = PCAWITHKNN; }
+    else              { mod = SIMPLEKNN; }
 
-
-//   Descomentar esto solo en PCA
-//    simpleKnn.setAlpha(5);
-
-
+    Model simpleKnn(mod);
+    if (*method == 1) MODE mod = PCAWITHKNN;
     simpleKnn.setK(10);
-
 
 //    Le pasamos la direccion al dataset de training
 
     simpleKnn.train(trainSetName);
 
+//  SavePPMFile("../test.ppm", simpleKnn.images[0].first, 92, 112,PPM_LOADER_PIXEL_TYPE_GRAY_8B, " ");
 
 //    Evaluamos los tests y el modelo se guarda adentro los resultados
-//  simpleKnn.evaluate(testSetName);
+    simpleKnn.evaluate(testSetName);
 
 
 //    Le pasamos el archivo donde guardarlos
@@ -94,5 +75,12 @@ int main(int argc, char *argv[]) {
 
 
     return 0;
+
+    //ESTO ES CODIGO DEL TP PASADO QUE ME AYUDA A SABER COMO CARGAR ARCHIVOS PARA LEER Y ESCRIBIR
+//    ifstream input(argv[1]);
+//    ofstream resultsFile;
+//    ofstream timeFile;
+//    resultsFile.open("../experimentacion/results/results.out");
+//    timeFile.open("../experimentacion/results/time",std::ios_base::app);
 }
 
