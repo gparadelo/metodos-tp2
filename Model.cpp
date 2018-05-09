@@ -52,20 +52,24 @@ void Model::loadDataset(const char *trainDatasetName) {
         uchar *data = NULL;
         int width = 0, height = 0;
         PPM_LOADER_PIXEL_TYPE pt = PPM_LOADER_PIXEL_TYPE_INVALID;
-        char filename[256];
+        char filename[256] = {0};
         input.getline(filename, 256, ',');
         bool ret = LoadPPMFile(&data, &width, &height, &pt, filename);
 
-        if (!ret || width == 0 || height == 0 || pt != PPM_LOADER_PIXEL_TYPE_RGB_8B) {
+        if (!ret || width == 0 || height == 0 || pt != PPM_LOADER_PIXEL_TYPE_GRAY_8B) {
             throw std::runtime_error("test_load failed");
         }
 
-        char stringClass[8];
+        char stringClass[8]= {0};
+        input.ignore(1, ' ');
         input.getline(stringClass, 8, ',');
         int intClass = stoi(stringClass);
 
         pair<uchar*, int> trainingInstance = make_pair(data, intClass);
         images.push_back(trainingInstance);
+        input.ignore(1, '/n');
+
+
     }
 }
 
