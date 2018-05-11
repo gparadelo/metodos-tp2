@@ -12,6 +12,7 @@
 #include <cassert>
 #include <utility>
 #include <algorithm>
+#include <cmath>
 
 using namespace std;
 

@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
     else              { mod = SIMPLEKNN; }
 
     Model simpleKnn(mod);
-    if (*method == 1) MODE mod = PCAWITHKNN;
+
     simpleKnn.setK(3);
 
 //    Le pasamos la direccion al dataset de training
