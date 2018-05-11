@@ -38,15 +38,17 @@ public:
 
     void outputResults(const char * string);
 
+    vector<vector<double>> calculateCovarianceMatrix(Dataset X);
+
     //podria querer cambiar MODE desde acá
 
     //podriamos tener observador de _images
 private:
     MODE mode;
     int _alpha;
-    int _k;
-    int _width;
-    int _height;
+    unsigned int _k;
+    unsigned int _width;
+    unsigned int _height;
 
     void loadDataset(const char *trainDatasetName, Dataset* dest);
 

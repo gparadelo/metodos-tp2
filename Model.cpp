@@ -21,6 +21,9 @@ void Model::evaluate(const char *testDatasetName) {
         }
         cout << endl;
     }
+    else {
+
+    }
 }
 
 Model::Model(MODE mode) : mode(mode) {
@@ -127,4 +130,44 @@ int getSquaredNorm(uchar* &v1, uchar* &v2, int size) { //Qué onda con el const 
 
 bool pairCompare(pair<int, int> i, pair<int, int> j) {
     return (i.first < j.first);
+}
+
+vector<vector<double>> Model::calculateCovarianceMatrix(Dataset X) {
+    vector<vector<double>> normalizedX(_height, vector<double>(_width, 0));
+    vector<double> norm(_width, 0);
+
+    //Calculo la norma de todas las imagenes por cada pixel
+    for (int j = 0; j < _width; ++j) {
+        double sum = 0;
+        for (int i = 0; i < _height; ++i) {
+            sum += (double)X[i].first[j];
+        }
+        norm[j] = sum / sqrt((double)_height - 1);
+    }
+
+
+    //Calculo cada imagen normalizada
+    for (int i = 0; i < _height; ++i) {
+        for (int j = 0; j < _width*_height; ++j) {
+            double normalizedPixel = (((double)X[i].first[j]) - norm[j]) / sqrt((double) _height);
+            normalizedX[i][j] = normalizedPixel;
+        }
+    }
+
+    vector<vector<double>> normalizedXt(_height, vector<double>(_width, 0));
+
+    for (size_t i = 0; i < normalizedX.size(); ++i)
+        for (size_t j = 0; j < normalizedX[0].size(); ++j)
+            normalizedXt[j][i] = normalizedX[i][j];
+
+    vector<vector<double>> covarianceMatrix(_height, vector<double>(_width, 0));
+    for (int i = 0; i < _height; ++i) {
+        for (int j = 0; j < _width; ++j) {
+            for (int k = 0; k < _height; ++k) {
+                covarianceMatrix[i][j] += normalizedXt[i][k] * normalizedX[k][j];
+            }
+        }
+    }
+
+    return covarianceMatrix;
 }
