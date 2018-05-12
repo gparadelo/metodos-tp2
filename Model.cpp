@@ -133,8 +133,7 @@ bool pairCompare(pair<int, int> i, pair<int, int> j) {
 }
 
 vector<vector<double>> Model::calculateCovarianceMatrix(Dataset X) {
-    vector<vector<double>> normalizedX(_height, vector<double>(_width, 0));
-    vector<double> norm(_width, 0);
+    vector<double> avg(_width, 0);
 
     //Calculo la norma de todas las imagenes por cada pixel
     for (int j = 0; j < _width; ++j) {
@@ -142,14 +141,15 @@ vector<vector<double>> Model::calculateCovarianceMatrix(Dataset X) {
         for (int i = 0; i < _height; ++i) {
             sum += (double)X[i].first[j];
         }
-        norm[j] = sum / sqrt((double)_height - 1);
+        avg[j] = sum / (double)_height;
     }
 
+    vector<vector<double>> normalizedX(_height, vector<double>(_width, 0));
 
     //Calculo cada imagen normalizada
     for (int i = 0; i < _height; ++i) {
         for (int j = 0; j < _width*_height; ++j) {
-            double normalizedPixel = (((double)X[i].first[j]) - norm[j]) / sqrt((double) _height);
+            double normalizedPixel = (((double)X[i].first[j]) - avg[j]) / sqrt((double) _height - 1);
             normalizedX[i][j] = normalizedPixel;
         }
     }
