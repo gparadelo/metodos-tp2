@@ -24,7 +24,8 @@ typedef enum {
 template <typename T>
 using matrix = vector<vector<T>>;
 
-typedef vector<pair<uchar*,int>> Dataset;
+template <typename T>
+typedef vector<pair<T,int>> Dataset;
 
 class Model {
 
@@ -43,6 +44,8 @@ public:
 
     matrix<double> calculateCovarianceMatrix(Dataset X);
 
+    void getPCADataset();
+
     //podria querer cambiar MODE desde acá
 
     //podriamos tener observador de _images
@@ -57,7 +60,15 @@ private:
 
     int  kNearestNeighbors(uchar* newImage);
 
-    Dataset images;
+    void getTC();
+
+    Dataset applyTC(Dataset data, matrix<double> mat);
+
+    Dataset<uchar*> images;
+
+    Dataset<double*> reducedDataset;
+
+    matrix<double> tc;
 
 };
 
@@ -72,5 +83,8 @@ vector<double> matrixVectorMultiply(matrix<double> m1, vector<double> v1);
 matrix<double> vectorMatrixMultiply(vector<double> v1, matrix<double> m1);
 
 double vectorVectorMultiply(vector<double> v1, vector<double> v2);
+
+pair<vector<double>, double> powerMethod(matrix<double> mat, vector<double> x0, int niter);
+
 
 #endif //CARALIBRO_DATASET_H

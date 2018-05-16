@@ -33,11 +33,11 @@ Model::Model(MODE mode) : mode(mode) {
 void Model::train(const char *trainDatasetName) {
     loadDataset(trainDatasetName, &images);
 
-    if (mode == SIMPLEKNN) return;
-
     if (mode == PCAWITHKNN) {
-
+        getPCADataset();
     }
+
+    return;
 }
 
 void Model::setAlpha(int alpha) {
@@ -90,6 +90,16 @@ void Model::loadDataset(const char *trainDatasetName, Dataset * dest) {
 void Model::outputResults(const char *outputFileName) {
 
 }
+
+
+void Model::getPCADataset() {
+    getTC();
+    reducedDataset = applyTC(images, tc);
+
+    return;
+}
+
+
 
 int  Model::kNearestNeighbors(uchar* newImage) {
     vector< pair <int, int> > distances;
