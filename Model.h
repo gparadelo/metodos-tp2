@@ -21,6 +21,9 @@ typedef enum {
     PCAWITHKNN = 1
 } MODE;
 
+template <typename T>
+using matrix = vector<vector<T>>;
+
 typedef vector<pair<uchar*,int>> Dataset;
 
 class Model {
@@ -38,7 +41,7 @@ public:
 
     void outputResults(const char * string);
 
-    vector<vector<double>> calculateCovarianceMatrix(Dataset X);
+    matrix<double> calculateCovarianceMatrix(Dataset X);
 
     //podria querer cambiar MODE desde acá
 
@@ -61,5 +64,13 @@ private:
 int getSquaredNorm(uchar* &v1, uchar* &v2, int size);
 
 bool pairCompare(pair<int, int> i, pair<int, int> j);
+
+matrix<double> matrixMultiply(matrix<double> m1, matrix<double> m2);
+
+vector<double> matrixVectorMultiply(matrix<double> m1, vector<double> v1);
+
+matrix<double> vectorMatrixMultiply(vector<double> v1, matrix<double> m1);
+
+double vectorVectorMultiply(vector<double> v1, vector<double> v2);
 
 #endif //CARALIBRO_DATASET_H

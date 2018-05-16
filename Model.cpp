@@ -132,42 +132,92 @@ bool pairCompare(pair<int, int> i, pair<int, int> j) {
     return (i.first < j.first);
 }
 
-vector<vector<double>> Model::calculateCovarianceMatrix(Dataset X) {
-    vector<double> avg(_width, 0);
+matrix<double> Model::calculateCovarianceMatrix(Dataset X) {
+    int numberOfPixels = _width*_height;
+
+    vector<double> avg(numberOfPixels, 0);
 
     //Calculo la norma de todas las imagenes por cada pixel
-    for (int j = 0; j < _width; ++j) {
-        double sum = 0;
-        for (int i = 0; i < _height; ++i) {
-            sum += (double)X[i].first[j];
+    for (int j = 0; j < numberOfPixels; ++j) {
+        int sum = 0;
+        for (int i = 0; i < images.size(); ++i) {
+            sum += X[i].first[j];
         }
-        avg[j] = sum / (double)_height;
+        avg[j] = (double)sum / (double)images.size();
     }
 
-    vector<vector<double>> normalizedX(_height, vector<double>(_width, 0));
+    matrix<double> normalizedX(images.size(), vector<double>(numberOfPixels, 0));
 
     //Calculo cada imagen normalizada
-    for (int i = 0; i < _height; ++i) {
-        for (int j = 0; j < _width*_height; ++j) {
-            double normalizedPixel = (((double)X[i].first[j]) - avg[j]) / sqrt((double) _height - 1);
+    for (int i = 0; i < images.size(); ++i) {
+        for (int j = 0; j < numberOfPixels; ++j) {
+            double normalizedPixel = (((double)X[i].first[j]) - avg[j]) / sqrt((double) images.size() - 1);
             normalizedX[i][j] = normalizedPixel;
         }
     }
 
-    vector<vector<double>> normalizedXt(_height, vector<double>(_width, 0));
+    matrix<double> normalizedXt(numberOfPixels, vector<double>(images.size(), 0));
 
     for (size_t i = 0; i < normalizedX.size(); ++i)
         for (size_t j = 0; j < normalizedX[0].size(); ++j)
             normalizedXt[j][i] = normalizedX[i][j];
 
-    vector<vector<double>> covarianceMatrix(_height, vector<double>(_width, 0));
-    for (int i = 0; i < _height; ++i) {
-        for (int j = 0; j < _width; ++j) {
-            for (int k = 0; k < _height; ++k) {
-                covarianceMatrix[i][j] += normalizedXt[i][k] * normalizedX[k][j];
+    matrix <double> covarianceMatrix = matrixMultiply(normalizedXt, normalizedX);
+
+    return covarianceMatrix;
+}
+
+pair<vector<double>, double> powerMethod(matrix<double> mat, vector<double> x0, int niter) {
+    vector<double> v = x0;
+
+    for (int i = 0; i < niter; ++i) {
+        v = matrixVectorMultiply(mat, v);
+    }
+
+    double lambda = vectorVectorMultiply(v, matrixVectorMultiply(mat, v))
+                    / vectorVectorMultiply(v, v);
+
+    pair<vector<double>, double> ret = make_pair(v, lambda);
+
+    return ret;
+}
+
+matrix<double> matrixMultiply(matrix<double> m1, matrix<double> m2) {
+    assert(m1[0].size() == m2.size());
+    matrix<double> ret(m1.size(), vector<double>(m2[0].size(), 0));
+
+    for (int i = 0; i < m1.size(); ++i) {
+        for (int j = 0; j < m2[0].size(); ++j) {
+            for (int k = 0; k < m2.size(); ++k) {
+                ret[i][j] += m1[i][k] * m2[k][j];
             }
         }
     }
 
-    return covarianceMatrix;
+    return ret;
+}
+
+vector<double> matrixVectorMultiply(matrix<double> m1, vector<double> v1) {
+    assert(m1[0].size() == v1.size());
+
+    vector<double> ret(m1.size(), 0);
+
+    for (int i = 0; i < m1.size(); ++i) {
+        for (int k = 0; k < v1.size(); ++k) {
+            ret[i] += m1[i][k] * v1[k];
+        }
+    }
+
+    return ret;
+
+}
+
+matrix<double> vectorMatrixMultiply(vector<double> v1, matrix<double> m1) {
+
+
+}
+
+double vectorVectorMultiply(vector<double> v1, vector<double> v2) {
+
+
 }
