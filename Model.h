@@ -25,7 +25,7 @@ template <typename T>
 using matrix = vector<vector<T>>;
 
 template <typename T>
-typedef vector<pair<T,int>> Dataset;
+using Dataset = vector<pair<T,int>>;
 
 class Model {
 
@@ -42,7 +42,7 @@ public:
 
     void outputResults(const char * string);
 
-    matrix<double> calculateCovarianceMatrix(Dataset X);
+    matrix<double> calculateCovarianceMatrix(Dataset<uchar*> X);
 
     void getPCADataset();
 
@@ -56,13 +56,15 @@ private:
     unsigned int _width;
     unsigned int _height;
 
-    void loadDataset(const char *trainDatasetName, Dataset* dest);
+
+
+    void loadDataset(const char *trainDatasetName, Dataset<uchar*>* dest);
 
     int  kNearestNeighbors(uchar* newImage);
 
     void getTC();
 
-    Dataset applyTC(Dataset data, matrix<double> mat);
+    void applyTC(Dataset<uchar*> data, matrix<double> mat);
 
     Dataset<uchar*> images;
 

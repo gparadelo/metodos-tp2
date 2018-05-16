@@ -8,7 +8,7 @@
 void Model::evaluate(const char *testDatasetName) {
     ifstream input(testDatasetName);
 
-    Dataset testSet;
+    Dataset<uchar*> testSet;
     loadDataset(testDatasetName, &testSet);
 
     vector<int> people;
@@ -48,7 +48,7 @@ void Model::setK(int k) {
     _k = k;
 }
 
-void Model::loadDataset(const char *trainDatasetName, Dataset * dest) {
+void Model::loadDataset(const char *trainDatasetName, Dataset<uchar*> * dest) {
     ifstream input(trainDatasetName);
 
     if (!input.good()) {
@@ -94,7 +94,7 @@ void Model::outputResults(const char *outputFileName) {
 
 void Model::getPCADataset() {
     getTC();
-    reducedDataset = applyTC(images, tc);
+    applyTC(images, tc);
 
     return;
 }
@@ -142,7 +142,7 @@ bool pairCompare(pair<int, int> i, pair<int, int> j) {
     return (i.first < j.first);
 }
 
-matrix<double> Model::calculateCovarianceMatrix(Dataset X) {
+matrix<double> Model::calculateCovarianceMatrix(Dataset<uchar*> X) {
     int numberOfPixels = _width*_height;
 
     vector<double> avg(numberOfPixels, 0);
