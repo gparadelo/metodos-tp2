@@ -230,7 +230,6 @@ matrix<T> transposeAndMultiplyWithItself(const matrix<T> &A) {
                 //CHEQUEAR ESTO A VER SI ESTA BIEN
                 ret[i][j] += A[k][i] * A[k][j];
             }
-            ret[i][j] *= (A.size() - 1);
         }
     }
     return ret;
@@ -279,7 +278,7 @@ matrix<double> vectorMatrixMultiply(vector<double> v1, matrix<double> m1) {
 
 template<typename T, typename X>
 void Model::applyTCToDataset(Dataset<T> &dst, Dataset<X> &src) {
-//    assert(dst.size() == 0);
+    assert(dst.size() == 0);
     int numberOfPixels = _height * _width;
     //Se cuenta con tc de tamaño numberOfPixels x alpha
     //hay que hacer XV
@@ -287,7 +286,7 @@ void Model::applyTCToDataset(Dataset<T> &dst, Dataset<X> &src) {
 
     for (int i = 0; i < src.size(); ++i) {
 
-        vector<double> currentVector(_alpha, 0);
+        vector<double> currentVector;
 
         for (int j = 0; j < _alpha; ++j) {
             double currentValue = 0;
