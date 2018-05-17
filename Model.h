@@ -57,14 +57,16 @@ private:
     void loadDataset(const char *trainDatasetName, Dataset<uchar*>* dest);
 
 
-
-    int  kNearestNeighbors(uchar* newImage);
+    template <typename T, typename X>
+    int  kNearestNeighbors(Dataset<X> datasetToValidateAgainst, T newImage);
 
     void getTC();
 
-    void normalizeDataset();
+    template <typename T, typename X>
+    void normalizeDataset(Dataset<T>&, Dataset<X>&, bool setsAveragePixelsVector);
 
-    void applyTCToDataset();
+    template <typename T, typename X>
+    void applyTCToDataset(Dataset<T>& dest, Dataset<X>& src);
 
     void getPCADataset();
 
@@ -72,7 +74,10 @@ private:
 
     Dataset<vector<double>> normalizedDataset;
 
+    Dataset<vector<double>> normalizedTestDataset;
+
     Dataset<vector<double>> reducedDataset;
+    Dataset<vector<double>> reducedTestDataset;
 
     matrix<double> datasetToMatrix(Dataset<vector<double>> &D);
 
@@ -95,8 +100,8 @@ matrix<T> addMatrices(matrix<T>,matrix<T>);
 template <typename T>
 vector<T> normalizeVector(vector<T>);
 
-
-int getSquaredNorm(uchar* &v1, uchar* &v2, int size);
+template <typename T>
+double getSquaredNorm(T &v1, T &v2, int size);
 
 bool pairCompare(pair<int, int> i, pair<int, int> j);
 

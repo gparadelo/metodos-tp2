@@ -24,55 +24,74 @@ void Model::evaluate(const char *testDatasetName) {
     loadDataset(testDatasetName, &testSet);
 
     vector<int> people;
+    assert(_k <= images.size());
 
-    if (mode == SIMPLEKNN) {
-        assert(_k <= images.size());
-        for (int i = 0; i < testSet.size(); ++i) {
-            people.push_back(kNearestNeighbors(testSet[i].first));
+    if (mode == PCAWITHKNN) {
+        bool setsAveragePixelsVector = false;
+        normalizeDataset(normalizedTestDataset, testSet, false);
+        applyTCToDataset(reducedTestDataset, normalizedTestDataset);
+        for (int i = 0; i < reducedTestDataset.size(); ++i) {
+            people.push_back(kNearestNeighbors(reducedDataset, reducedTestDataset[i].first));
             cout << people[i] << " ";
         }
         cout << endl;
-    } else {
 
+    } else {
+        for (int i = 0; i < testSet.size(); ++i) {
+            people.push_back(kNearestNeighbors(images, testSet[i].first));
+            cout << people[i] << " ";
+        }
+        cout << endl;
     }
+
+
 }
+
 
 void Model::train(const char *trainDatasetName) {
     loadDataset(trainDatasetName, &images);
 
+
     if (mode == PCAWITHKNN) {
-        normalizeDataset();
+        //Params: Dataset destination, Dataset src
+        bool setsAveragePixelsVector = true;
+        normalizeDataset(normalizedDataset, images, setsAveragePixelsVector);
         getPCADataset();
     }
 
 }
 
-void Model::normalizeDataset() {
+template<typename T, typename X>
+void Model::normalizeDataset(Dataset<T> &dst, Dataset<X> &src, bool setsAveragePixelsVector) {
     int numberOfPixels = _width * _height;
 
-    vector<double> avg(numberOfPixels, 0);
+    if (setsAveragePixelsVector) {
 
-    //Calculo la norma de todas las imagenes por cada pixel
-    for (int j = 0; j < numberOfPixels; ++j) {
-        int sum = 0;
-        for (int i = 0; i < images.size(); ++i) {
-            sum += images[i].first[j];
+        vector<double> avg(numberOfPixels, 0);
+
+        //Calculo la norma de todas las imagenes por cada pixel
+        for (int j = 0; j < numberOfPixels; ++j) {
+            int sum = 0;
+            for (int i = 0; i < src.size(); ++i) {
+                sum += src[i].first[j];
+            }
+            avg[j] = (double) sum / (double) src.size();
         }
-        avg[j] = (double) sum / (double) images.size();
+
+        averagePixels = avg;
+        standardDeviation = sqrt((double) src.size() - 1);
     }
 
-    averagePixels = avg;
-    standardDeviation = sqrt((double) images.size() - 1);
 
     //Calculo cada imagen normalizada
-    for (int i = 0; i < images.size(); ++i) {
+    for (int i = 0; i < src.size(); ++i) {
         vector<double> currentNormalizedImage;
         for (int j = 0; j < numberOfPixels; ++j) {
-            double normalizedPixel = (((double) images[i].first[j]) - avg[j]) / standardDeviation;
+            double normalizedPixel = (((double) src[i].first[j]) - averagePixels[j]) / standardDeviation;
             currentNormalizedImage.push_back(normalizedPixel);
         }
-        pair<vector<double>, int> normalizedTrainingInstance = make_pair(currentNormalizedImage, images[i].second);
-        normalizedDataset.push_back(normalizedTrainingInstance);
+        pair<vector<double>, int> normalizedTrainingInstance = make_pair(currentNormalizedImage, src[i].second);
+        dst.push_back(normalizedTrainingInstance);
     }
 
 
@@ -80,7 +99,9 @@ void Model::normalizeDataset() {
 
 void Model::getPCADataset() {
     getTC();
-    applyTCToDataset();
+
+    //Signature meaning: destination, source
+    applyTCToDataset(reducedDataset, normalizedDataset);
 }
 
 
@@ -128,11 +149,20 @@ void Model::outputResults(const char *outputFileName) {
 
 }
 
-int Model::kNearestNeighbors(uchar *newImage) {
+template<typename T, typename X>
+int Model::kNearestNeighbors(Dataset<X> datasetToValidateAgainst, T newImage) {
     vector<pair<int, int> > distances;
 
-    for (int i = 0; i < images.size(); ++i) {
-        pair<int, int> dist(getSquaredNorm(images[i].first, newImage, (_width * _height)), images[i].second);
+    int size;
+    if (mode == SIMPLEKNN) {
+        size = (_width * _height);
+    } else {
+        size = _alpha;
+    }
+
+    for (int i = 0; i < datasetToValidateAgainst.size(); ++i) {
+        pair<int, int> dist = make_pair(getSquaredNorm(datasetToValidateAgainst[i].first, newImage, size),
+                                        datasetToValidateAgainst[i].second);
         distances.push_back(dist);
     }
 
@@ -169,11 +199,12 @@ matrix<double> Model::datasetToMatrix(Dataset<vector<double>> &D) {
     return ret;
 }
 
-int getSquaredNorm(uchar *&v1, uchar *&v2, int size) { //Qué onda con el const *uchar?
-    int distance = 0;
+template<typename T>
+double getSquaredNorm(T &v1, T &v2, int size) {
+    double distance = 0;
 
     for (int i = 0; i < size; ++i) {
-        distance += pow((int) v1[i] - (int) v2[i], 2);
+        distance += pow((double) v1[i] - (double) v2[i], 2);
     }
     return distance;
 }
@@ -251,30 +282,26 @@ matrix<double> vectorMatrixMultiply(vector<double> v1, matrix<double> m1) {
     return matrix<double>();
 }
 
-
-void Model::applyTCToDataset() {
+template<typename T, typename X>
+void Model::applyTCToDataset(Dataset<T> &dst, Dataset<X> &src) {
     int numberOfPixels = _height * _width;
     //Se cuenta con tc de tamaño numberOfPixels x alpha
     //hay que hacer XV
     //X tiene que ser normalizedDataset
 
-    for (int i = 0; i < normalizedDataset.size(); ++i) {
+    for (int i = 0; i < src.size(); ++i) {
 
-        vector<double> currentVector(normalizedDataset.size(),0);
-
-        double currentValue = 0;
-
+        vector<double> currentVector(_alpha, 0);
 
         for (int j = 0; j < _alpha; ++j) {
-
+            double currentValue = 0;
             for (int k = 0; k < numberOfPixels; ++k) {
-
-                currentValue += normalizedDataset[i].first[k] * tc[k][j];
+                currentValue += src[i].first[k] * tc[k][j];
             }
-            currentVector[i] = (currentValue);
+            currentVector.push_back(currentValue);
         }
-        pair<vector<double>,int> reducedTrainingInstance = make_pair(currentVector, normalizedDataset[i].second);
-        reducedDataset.push_back(reducedTrainingInstance);
+        pair<vector<double>, int> reducedTrainingInstance = make_pair(currentVector, src[i].second);
+        dst.push_back(reducedTrainingInstance);
     }
 
 }

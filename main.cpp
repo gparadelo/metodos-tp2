@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
     Model pcaWithKnn(mod);
 
     pcaWithKnn.setK(3);
-    pcaWithKnn.setAlpha(10);
+    pcaWithKnn.setAlpha(200);
 
 //    Le pasamos la direccion al dataset de training
 
