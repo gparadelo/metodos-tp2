@@ -38,11 +38,11 @@ public:
 
     void evaluate(const char * string);
 
-    void train(const char string[]);
+    void train(const char * string);
 
     void outputResults(const char * string);
 
-    matrix<double> calculateCovarianceMatrix(Dataset<vector<double>> &X);
+    matrix<double> calculateCovarianceMatrix(const Dataset<vector<double>> &X);
 
     //podria querer cambiar MODE desde acá
 
@@ -60,30 +60,25 @@ private:
     template <typename T, typename X>
     int  kNearestNeighbors(Dataset<X> datasetToValidateAgainst, T newImage);
 
-    void getTC();
+    template <typename T>
+    void getTC(const Dataset<T>&);
 
-    template <typename T, typename X>
-    void normalizeDataset(Dataset<T>&, Dataset<X>&, bool setsAveragePixelsVector);
+    template < typename T>
+    void normalizeDataset(Dataset<vector<double>>&, const Dataset<T>&);
+
+    template <typename T>
+    void setAveragePixelsVector(const Dataset<T> &src);
 
     template <typename T, typename X>
     void applyTCToDataset(Dataset<T>& dest, Dataset<X>& src);
 
-    void getPCADataset();
+    matrix<double> datasetToMatrix(const Dataset<vector<double>> &D);
+
 
     Dataset<uchar*> images;
-
-    Dataset<vector<double>> normalizedDataset;
-
-    Dataset<vector<double>> normalizedTestDataset;
-
     Dataset<vector<double>> reducedDataset;
-    Dataset<vector<double>> reducedTestDataset;
-
-    matrix<double> datasetToMatrix(Dataset<vector<double>> &D);
-
     matrix<double> tc;
     vector<double> averagePixels;
-
     double standardDeviation;
 };
 
@@ -107,15 +102,15 @@ bool pairCompare(pair<int, int> i, pair<int, int> j);
 
 matrix<double> matrixMultiply(matrix<double> &m1, matrix<double> &m2);
 
-vector<double> matrixVectorMultiply(matrix<double> &m1, vector<double> &v1);
+vector<double> matrixVectorMultiply(const matrix<double> &m1, const vector<double> &v1);
 
 matrix<double> vectorMatrixMultiply(vector<double> v1, matrix<double> m1);
 
 double vectorVectorMultiply(vector<double> v1, vector<double> v2);
 
-pair<vector<double>, double> powerMethod(matrix<double> &mat);
+pair<vector<double>, double> powerMethod(const matrix<double> &mat);
 
 template <typename T>
-matrix<T> transposeAndMultiplyWithItself(matrix<T> & A);
+matrix<T> transposeAndMultiplyWithItself(const matrix<T> & A);
 
 #endif //CARALIBRO_DATASET_H

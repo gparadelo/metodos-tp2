@@ -27,11 +27,14 @@ void Model::evaluate(const char *testDatasetName) {
     assert(_k <= images.size());
 
     if (mode == PCAWITHKNN) {
-        bool setsAveragePixelsVector = false;
-        normalizeDataset(normalizedTestDataset, testSet, false);
-        applyTCToDataset(reducedTestDataset, normalizedTestDataset);
-        for (int i = 0; i < reducedTestDataset.size(); ++i) {
-            people.push_back(kNearestNeighbors(reducedDataset, reducedTestDataset[i].first));
+        Dataset<vector<double>> normalizedTestSet;
+        normalizeDataset(normalizedTestSet, testSet);
+
+        Dataset<vector<double>> reducedTestSet;
+        applyTCToDataset(reducedTestSet, normalizedTestSet);
+
+        for (int i = 0; i < reducedTestSet.size(); ++i) {
+            people.push_back(kNearestNeighbors(reducedDataset, reducedTestSet[i].first));
             cout << people[i] << " ";
         }
         cout << endl;
@@ -43,45 +46,49 @@ void Model::evaluate(const char *testDatasetName) {
         }
         cout << endl;
     }
-
-
 }
 
 
 void Model::train(const char *trainDatasetName) {
     loadDataset(trainDatasetName, &images);
 
-
     if (mode == PCAWITHKNN) {
         //Params: Dataset destination, Dataset src
-        bool setsAveragePixelsVector = true;
-        normalizeDataset(normalizedDataset, images, setsAveragePixelsVector);
-        getPCADataset();
-    }
+        setAveragePixelsVector(images);
 
+        Dataset<vector<double>> normalizedDataset;
+        normalizeDataset(normalizedDataset, images);
+
+        getTC(normalizedDataset);
+        //Signature meaning: destination, source
+        applyTCToDataset(reducedDataset, normalizedDataset);
+
+      //matrix<double> covariance = calculateCovarianceMatrix(reducedDataset);
+        //Tendria que dar diagonal?
+    }
 }
 
-template<typename T, typename X>
-void Model::normalizeDataset(Dataset<T> &dst, Dataset<X> &src, bool setsAveragePixelsVector) {
+template<typename X>
+void Model::setAveragePixelsVector(const Dataset<X> &src) {
     int numberOfPixels = _width * _height;
+    vector<double> avg(numberOfPixels, 0);
 
-    if (setsAveragePixelsVector) {
-
-        vector<double> avg(numberOfPixels, 0);
-
-        //Calculo la norma de todas las imagenes por cada pixel
-        for (int j = 0; j < numberOfPixels; ++j) {
-            int sum = 0;
-            for (int i = 0; i < src.size(); ++i) {
-                sum += src[i].first[j];
-            }
-            avg[j] = (double) sum / (double) src.size();
+    //Calculo la norma de todas las imagenes por cada pixel
+    for (int j = 0; j < numberOfPixels; ++j) {
+        int sum = 0;
+        for (int i = 0; i < src.size(); ++i) {
+            sum += src[i].first[j];
         }
-
-        averagePixels = avg;
-        standardDeviation = sqrt((double) src.size() - 1);
+        avg[j] = (double) sum / (double) src.size();
     }
 
+    averagePixels = avg;
+    standardDeviation = sqrt((double) src.size() - 1);
+}
+
+template<typename X>
+void Model::normalizeDataset(Dataset<vector<double>> &dst, const Dataset<X> &src) {
+    int numberOfPixels = _width * _height;
 
     //Calculo cada imagen normalizada
     for (int i = 0; i < src.size(); ++i) {
@@ -90,18 +97,9 @@ void Model::normalizeDataset(Dataset<T> &dst, Dataset<X> &src, bool setsAverageP
             double normalizedPixel = (((double) src[i].first[j]) - averagePixels[j]) / standardDeviation;
             currentNormalizedImage.push_back(normalizedPixel);
         }
-        pair<vector<double>, int> normalizedTrainingInstance = make_pair(currentNormalizedImage, src[i].second);
+        pair<vector<double>, int> normalizedTrainingInstance = make_pair(currentNormalizedImage, (int)src[i].second);
         dst.push_back(normalizedTrainingInstance);
     }
-
-
-}
-
-void Model::getPCADataset() {
-    getTC();
-
-    //Signature meaning: destination, source
-    applyTCToDataset(reducedDataset, normalizedDataset);
 }
 
 
@@ -151,7 +149,7 @@ void Model::outputResults(const char *outputFileName) {
 
 template<typename T, typename X>
 int Model::kNearestNeighbors(Dataset<X> datasetToValidateAgainst, T newImage) {
-    vector<pair<int, int> > distances;
+    vector<pair<double, int> > distances;
 
     int size;
     if (mode == SIMPLEKNN) {
@@ -161,8 +159,8 @@ int Model::kNearestNeighbors(Dataset<X> datasetToValidateAgainst, T newImage) {
     }
 
     for (int i = 0; i < datasetToValidateAgainst.size(); ++i) {
-        pair<int, int> dist = make_pair(getSquaredNorm(datasetToValidateAgainst[i].first, newImage, size),
-                                        datasetToValidateAgainst[i].second);
+        pair<double, int> dist = make_pair(getSquaredNorm(datasetToValidateAgainst[i].first, newImage, size),
+                                 (int)datasetToValidateAgainst[i].second);
         distances.push_back(dist);
     }
 
@@ -186,7 +184,7 @@ int Model::kNearestNeighbors(Dataset<X> datasetToValidateAgainst, T newImage) {
     return nearest;
 }
 
-matrix<double> Model::datasetToMatrix(Dataset<vector<double>> &D) {
+matrix<double> Model::datasetToMatrix(const Dataset<vector<double>> &D) {
 
     matrix<double> ret(D.size(), vector<double>(D[0].first.size(), 0));
 
@@ -214,48 +212,44 @@ bool pairCompare(pair<int, int> i, pair<int, int> j) {
     return (i.first < j.first);
 }
 
-matrix<double> Model::calculateCovarianceMatrix(Dataset<vector<double>> &X) {
-    int numberOfPixels = _height * _width;
+matrix<double> Model::calculateCovarianceMatrix(const Dataset<vector<double>> &X) {
 
     matrix<double> normalizedX = datasetToMatrix(X);
-
-
     matrix<double> covarianceMatrix = transposeAndMultiplyWithItself(normalizedX);
 
     return covarianceMatrix;
 }
 
 template<typename T>
-matrix<T> transposeAndMultiplyWithItself(matrix<T> &A) {
+matrix<T> transposeAndMultiplyWithItself(const matrix<T> &A) {
     matrix<double> ret(A[0].size(), vector<double>(A[0].size(), 0));
 
     for (int i = 0; i < A[0].size(); ++i) {
         for (int j = 0; j < A[0].size(); ++j) {
-            ret[i][j] = 0;
             for (int k = 0; k < A.size(); ++k) {
                 //CHEQUEAR ESTO A VER SI ESTA BIEN
                 ret[i][j] += A[k][i] * A[k][j];
-                ret[i][j] *= (A.size() - 1);
             }
+            ret[i][j] *= (A.size() - 1);
         }
     }
     return ret;
 }
 
-void Model::getTC() {
+template<typename T>
+void Model::getTC(const Dataset<T>& src) {
     //Get TC tiene que aplicar el método de la potencia para conseguir los alpha autovectores
     //arma V
     int numberOfPixels = _height * _width;
 
     vector<pair<vector<double>, double>> eigenVectorsAndValues;
 
-    matrix<double> currentMatrix = calculateCovarianceMatrix(normalizedDataset);
+    matrix<double> currentMatrix = calculateCovarianceMatrix(src);
 
     for (int i = 0; i < _alpha; ++i) {
         pair<vector<double>, double> currentEigenVectorsAndValues = powerMethod(currentMatrix);
 
         eigenVectorsAndValues.push_back(currentEigenVectorsAndValues);
-
 
         //DEFLACION:
         matrix<double> vvt = vectorOuterProduct(currentEigenVectorsAndValues.first);
@@ -285,6 +279,7 @@ matrix<double> vectorMatrixMultiply(vector<double> v1, matrix<double> m1) {
 
 template<typename T, typename X>
 void Model::applyTCToDataset(Dataset<T> &dst, Dataset<X> &src) {
+//    assert(dst.size() == 0);
     int numberOfPixels = _height * _width;
     //Se cuenta con tc de tamaño numberOfPixels x alpha
     //hay que hacer XV
@@ -301,13 +296,13 @@ void Model::applyTCToDataset(Dataset<T> &dst, Dataset<X> &src) {
             }
             currentVector.push_back(currentValue);
         }
-        pair<vector<double>, int> reducedTrainingInstance = make_pair(currentVector, src[i].second);
+        pair<vector<double>, int> reducedTrainingInstance = make_pair(currentVector, (int)src[i].second);
         dst.push_back(reducedTrainingInstance);
     }
 
 }
 
-pair<vector<double>, double> powerMethod(matrix<double> &mat) {
+pair<vector<double>, double> powerMethod(const matrix<double> &mat) {
     vector<double> v(mat[0].size(), 1);
 
     v = normalizeVector(v);
@@ -355,7 +350,7 @@ matrix<double> matrixMultiply(matrix<double> &m1, matrix<double> &m2) {
     return ret;
 }
 
-vector<double> matrixVectorMultiply(matrix<double> &m1, vector<double> &v1) {
+vector<double> matrixVectorMultiply(const matrix<double> &m1, const vector<double> &v1) {
     assert(m1[0].size() == v1.size());
 
     vector<double> ret(m1.size(), 0);
