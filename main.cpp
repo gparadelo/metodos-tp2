@@ -56,22 +56,23 @@ int main(int argc, char *argv[]) {
     if (stoi(method) == 1) { mod = PCAWITHKNN; }
     else              { mod = SIMPLEKNN; }
 
-    Model simpleKnn(mod);
+    Model pcaWithKnn(mod);
 
-    simpleKnn.setK(3);
+    pcaWithKnn.setK(3);
+    pcaWithKnn.setAlpha(10);
 
 //    Le pasamos la direccion al dataset de training
 
-    simpleKnn.train(trainSetName);
+    pcaWithKnn.train(trainSetName);
 
-//  SavePPMFile("../test.ppm", simpleKnn.images[0].first, 92, 112,PPM_LOADER_PIXEL_TYPE_GRAY_8B, " ");
+//  SavePPMFile("../test.ppm", pcaWithKnn.images[0].first, 92, 112,PPM_LOADER_PIXEL_TYPE_GRAY_8B, " ");
 
 //    Evaluamos los tests y el modelo se guarda adentro los resultados
-    simpleKnn.evaluate(testSetName);
+    pcaWithKnn.evaluate(testSetName);
 
 
 //    Le pasamos el archivo donde guardarlos
-//  simpleKnn.outputResults("path/to/results.csv");
+//  pcaWithKnn.outputResults("path/to/results.csv");
 
 
     return 0;
