@@ -234,7 +234,8 @@ matrix<T> transposeAndMultiplyWithItself(matrix<T> &A) {
             ret[i][j] = 0;
             for (int k = 0; k < A.size(); ++k) {
                 //CHEQUEAR ESTO A VER SI ESTA BIEN
-                ret[i][j] += A[k][i] * A[k][i];
+                ret[i][j] += A[k][i] * A[k][j];
+                ret[i][j] *= (A.size() - 1);
             }
         }
     }
