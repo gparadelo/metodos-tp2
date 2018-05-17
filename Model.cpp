@@ -34,10 +34,10 @@ void Model::train(const char *trainDatasetName) {
     loadDataset(trainDatasetName, &images);
 
     if (mode == PCAWITHKNN) {
+        normalizeDataset();
         getPCADataset();
     }
 
-    return;
 }
 
 void Model::setAlpha(int alpha) {
@@ -94,10 +94,10 @@ void Model::outputResults(const char *outputFileName) {
 
 void Model::getPCADataset() {
     getTC();
-    applyTC(images, tc);
-
-    return;
+    applyTCToDataset();
 }
+
+
 
 
 
@@ -156,12 +156,15 @@ matrix<double> Model::calculateCovarianceMatrix(Dataset<uchar*> X) {
         avg[j] = (double)sum / (double)images.size();
     }
 
+    averagePixels = avg;
+    standardDeviation = sqrt((double) images.size() - 1);
+
     matrix<double> normalizedX(images.size(), vector<double>(numberOfPixels, 0));
 
     //Calculo cada imagen normalizada
     for (int i = 0; i < images.size(); ++i) {
         for (int j = 0; j < numberOfPixels; ++j) {
-            double normalizedPixel = (((double)X[i].first[j]) - avg[j]) / sqrt((double) images.size() - 1);
+            double normalizedPixel = (((double)X[i].first[j]) - avg[j]) / standardDeviation;
             normalizedX[i][j] = normalizedPixel;
         }
     }
@@ -177,9 +180,68 @@ matrix<double> Model::calculateCovarianceMatrix(Dataset<uchar*> X) {
     return covarianceMatrix;
 }
 
-pair<vector<double>, double> powerMethod(matrix<double> mat, vector<double> x0, int niter) {
-    vector<double> v = x0;
+void Model::getTC() {
+    //Get TC tiene que aplicar el método de la potencia para conseguir los alpha autovectores
+    //arma V
+    int numberOfPixels = _height * _width;
 
+    vector<pair<vector<double>,double>> eigenVectorsAndValues;
+
+
+    matrix<double> currentMatrix = datasetToMatrix(normalizedDataset);
+
+    for (int i = 0; i < _alpha; ++i) {
+        pair<vector<double>,double> currentEigenVectorsAndValues = powerMethod(currentMatrix);
+
+        eigenVectorsAndValues.push_back(currentEigenVectorsAndValues);
+
+        matrix<double> vvt = getMatrixFromVector(currentEigenVectorsAndValues.first);
+
+        vvt = matrixScalarMultiply(vvt, currentEigenVectorsAndValues.second);
+
+        vvt = matrixScalarMultiply(vvt, -1);
+
+
+        currentMatrix = addMatrices(currentMatrix, vvt);
+    }
+
+    matrix<double> a(numberOfPixels, vector<double>(_alpha, 0));
+
+    tc = a;
+    for (int j = 0; j < _alpha; ++j) {
+        for (int i = 0; i < numberOfPixels; ++i) {
+            tc[i][j] = eigenVectorsAndValues[j].first[i];
+        }
+    }
+}
+
+void Model::applyTCToDataset() {
+    int numberOfPixels = _height*_width;
+    //Se cuenta con tc de tamaño numberOfPixels x alpha
+    //hay que hacer XV
+    //X tiene que ser normalizedDataset    
+
+    for (int i = 0; i < normalizedDataset.size(); ++i) {
+        for (int j = 0; j < _alpha; ++j) {
+            double currentValue = 0;
+            for (int k = 0; k < numberOfPixels; ++k) {
+                currentValue += normalizedDataset[i].first[k] * tc[k][j];
+            }
+            reducedDataset[i].first.push_back(currentValue);
+        }
+        reducedDataset[i].second = normalizedDataset[i].second;
+    }
+
+}
+
+
+
+
+
+pair<vector<double>, double> powerMethod(matrix<double> mat) {
+    vector<double> v (mat[0].size(),1);
+
+    int niter = 1000;
     for (int i = 0; i < niter; ++i) {
         v = matrixVectorMultiply(mat, v);
     }
@@ -190,6 +252,39 @@ pair<vector<double>, double> powerMethod(matrix<double> mat, vector<double> x0, 
     pair<vector<double>, double> ret = make_pair(v, lambda);
 
     return ret;
+}
+
+void Model::normalizeDataset() {
+    int numberOfPixels = _width*_height;
+
+    vector<double> avg(numberOfPixels, 0);
+
+    //Calculo la norma de todas las imagenes por cada pixel
+    for (int j = 0; j < numberOfPixels; ++j) {
+        int sum = 0;
+        for (int i = 0; i < images.size(); ++i) {
+            sum += images[i].first[j];
+        }
+        avg[j] = (double)sum / (double)images.size();
+    }
+
+    averagePixels = avg;
+    standardDeviation = sqrt((double) images.size() - 1);
+
+    Dataset<vector<double>> normalizedDataset;
+
+    //Calculo cada imagen normalizada
+    for (int i = 0; i < images.size(); ++i) {
+        vector<double> currentNormalizedImage;
+        for (int j = 0; j < numberOfPixels; ++j) {
+            double normalizedPixel = (((double)images[i].first[j]) - avg[j]) / standardDeviation;
+            currentNormalizedImage.push_back(normalizedPixel);
+        }
+        pair<vector<double>,int> normalizedTrainingInstance = make_pair(currentNormalizedImage, images[i].second);
+        normalizedDataset.push_back(normalizedTrainingInstance);
+    }
+
+
 }
 
 matrix<double> matrixMultiply(matrix<double> m1, matrix<double> m2) {

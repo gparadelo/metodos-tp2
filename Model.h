@@ -44,35 +44,54 @@ public:
 
     matrix<double> calculateCovarianceMatrix(Dataset<uchar*> X);
 
-    void getPCADataset();
-
     //podria querer cambiar MODE desde acá
 
     //podriamos tener observador de _images
+
 private:
     MODE mode;
     int _alpha;
     unsigned int _k;
     unsigned int _width;
     unsigned int _height;
-
-
-
     void loadDataset(const char *trainDatasetName, Dataset<uchar*>* dest);
+
+
 
     int  kNearestNeighbors(uchar* newImage);
 
     void getTC();
 
-    void applyTC(Dataset<uchar*> data, matrix<double> mat);
+    void normalizeDataset();
+
+    void applyTCToDataset();
+
+    void getPCADataset();
 
     Dataset<uchar*> images;
 
-    Dataset<double*> reducedDataset;
+    Dataset<vector<double>> normalizedDataset;
+
+    Dataset<vector<double>> reducedDataset;
+
+    template <typename T, typename X>
+    matrix<X> datasetToMatrix(Dataset<T>);
 
     matrix<double> tc;
+    vector<double> averagePixels;
 
+    double standardDeviation;
 };
+
+
+template <typename T>
+matrix<T> getMatrixFromVector(vector<T>);
+
+template <typename T>
+matrix<T> matrixScalarMultiply(matrix<T>, T);
+
+template <typename T>
+matrix<T> addMatrices(matrix<T>,matrix<T>);
 
 int getSquaredNorm(uchar* &v1, uchar* &v2, int size);
 
