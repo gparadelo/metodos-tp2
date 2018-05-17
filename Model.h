@@ -42,7 +42,7 @@ public:
 
     void outputResults(const char * string);
 
-    matrix<double> calculateCovarianceMatrix(Dataset<uchar*> X);
+    matrix<double> calculateCovarianceMatrix(Dataset<vector<double>> &X);
 
     //podria querer cambiar MODE desde acá
 
@@ -74,8 +74,7 @@ private:
 
     Dataset<vector<double>> reducedDataset;
 
-    template <typename T, typename X>
-    matrix<X> datasetToMatrix(Dataset<T>);
+    matrix<double> datasetToMatrix(Dataset<vector<double>> &D);
 
     matrix<double> tc;
     vector<double> averagePixels;
@@ -85,7 +84,7 @@ private:
 
 
 template <typename T>
-matrix<T> getMatrixFromVector(vector<T>);
+matrix<T> vectorOuterProduct(vector<T>);
 
 template <typename T>
 matrix<T> matrixScalarMultiply(matrix<T>, T);
@@ -93,11 +92,15 @@ matrix<T> matrixScalarMultiply(matrix<T>, T);
 template <typename T>
 matrix<T> addMatrices(matrix<T>,matrix<T>);
 
+template <typename T>
+vector<T> normalizeVector(vector<T>);
+
+
 int getSquaredNorm(uchar* &v1, uchar* &v2, int size);
 
 bool pairCompare(pair<int, int> i, pair<int, int> j);
 
-matrix<double> matrixMultiply(matrix<double> m1, matrix<double> m2);
+matrix<double> matrixMultiply(matrix<double> &m1, matrix<double> &m2);
 
 vector<double> matrixVectorMultiply(matrix<double> m1, vector<double> v1);
 
@@ -105,7 +108,9 @@ matrix<double> vectorMatrixMultiply(vector<double> v1, matrix<double> m1);
 
 double vectorVectorMultiply(vector<double> v1, vector<double> v2);
 
-pair<vector<double>, double> powerMethod(matrix<double> mat, vector<double> x0, int niter);
+pair<vector<double>, double> powerMethod(matrix<double> mat);
 
+template <typename T>
+matrix<T> transposeAndMultiplyWithItself(matrix<T> & A);
 
 #endif //CARALIBRO_DATASET_H

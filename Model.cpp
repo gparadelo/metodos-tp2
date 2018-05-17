@@ -8,20 +8,19 @@
 void Model::evaluate(const char *testDatasetName) {
     ifstream input(testDatasetName);
 
-    Dataset<uchar*> testSet;
+    Dataset<uchar *> testSet;
     loadDataset(testDatasetName, &testSet);
 
     vector<int> people;
 
-    if(mode == SIMPLEKNN){
+    if (mode == SIMPLEKNN) {
         assert(_k <= images.size());
         for (int i = 0; i < testSet.size(); ++i) {
             people.push_back(kNearestNeighbors(testSet[i].first));
             cout << people[i] << " ";
         }
         cout << endl;
-    }
-    else {
+    } else {
 
     }
 }
@@ -48,7 +47,7 @@ void Model::setK(int k) {
     _k = k;
 }
 
-void Model::loadDataset(const char *trainDatasetName, Dataset<uchar*> * dest) {
+void Model::loadDataset(const char *trainDatasetName, Dataset<uchar *> *dest) {
     ifstream input(trainDatasetName);
 
     if (!input.good()) {
@@ -80,7 +79,7 @@ void Model::loadDataset(const char *trainDatasetName, Dataset<uchar*> * dest) {
             input.getline(stringClass, 2, ',');
             intClass = stoi(stringClass);
         }
-        pair<uchar*, int> trainingInstance = make_pair(data, intClass);
+        pair<uchar *, int> trainingInstance = make_pair(data, intClass);
         dest->push_back(trainingInstance);
 
         input.ignore(1, '/n');
@@ -98,14 +97,11 @@ void Model::getPCADataset() {
 }
 
 
-
-
-
-int  Model::kNearestNeighbors(uchar* newImage) {
-    vector< pair <int, int> > distances;
+int Model::kNearestNeighbors(uchar *newImage) {
+    vector<pair<int, int> > distances;
 
     for (int i = 0; i < images.size(); ++i) {
-        pair<int, int> dist (getSquaredNorm(images[i].first, newImage, (_width*_height)), images[i].second);
+        pair<int, int> dist(getSquaredNorm(images[i].first, newImage, (_width * _height)), images[i].second);
         distances.push_back(dist);
     }
 
@@ -129,11 +125,24 @@ int  Model::kNearestNeighbors(uchar* newImage) {
     return nearest;
 }
 
-int getSquaredNorm(uchar* &v1, uchar* &v2, int size) { //Qué onda con el const *uchar?
+matrix<double> Model::datasetToMatrix(Dataset<vector<double>> &D) {
+
+    matrix<double> ret(D.size(), vector<double>(D[0].first.size(), 0));
+
+    for (int i = 0; i < D.size(); ++i) {
+        for (int j = 0; j < D[0].first.size(); ++j) {
+            ret[i][j] = D[i].first[j];
+        }
+    }
+
+    return ret;
+}
+
+int getSquaredNorm(uchar *&v1, uchar *&v2, int size) { //Qué onda con el const *uchar?
     int distance = 0;
 
-    for (int i = 0; i <  size; ++i) {
-        distance += pow((int)v1[i] - (int)v2[i], 2);
+    for (int i = 0; i < size; ++i) {
+        distance += pow((int) v1[i] - (int) v2[i], 2);
     }
     return distance;
 }
@@ -142,42 +151,39 @@ bool pairCompare(pair<int, int> i, pair<int, int> j) {
     return (i.first < j.first);
 }
 
-matrix<double> Model::calculateCovarianceMatrix(Dataset<uchar*> X) {
-    int numberOfPixels = _width*_height;
 
-    vector<double> avg(numberOfPixels, 0);
+matrix<double> Model::calculateCovarianceMatrix(Dataset<vector<double>> &X) {
+    int numberOfPixels = _height * _width;
 
-    //Calculo la norma de todas las imagenes por cada pixel
-    for (int j = 0; j < numberOfPixels; ++j) {
-        int sum = 0;
-        for (int i = 0; i < images.size(); ++i) {
-            sum += X[i].first[j];
-        }
-        avg[j] = (double)sum / (double)images.size();
-    }
+    matrix<double> normalizedX = datasetToMatrix(X);
 
-    averagePixels = avg;
-    standardDeviation = sqrt((double) images.size() - 1);
+//    matrix<double> normalizedXt(normalizedX[0].size(), vector<double>(normalizedX.size(), 0));
+//
+//    for (size_t i = 0; i < normalizedX.size(); ++i) {
+//        for (size_t j = 0; j < normalizedX[0].size(); ++j) {
+//            normalizedXt[j][i] = normalizedX[i][j];
+//        }
+//    }
 
-    matrix<double> normalizedX(images.size(), vector<double>(numberOfPixels, 0));
-
-    //Calculo cada imagen normalizada
-    for (int i = 0; i < images.size(); ++i) {
-        for (int j = 0; j < numberOfPixels; ++j) {
-            double normalizedPixel = (((double)X[i].first[j]) - avg[j]) / standardDeviation;
-            normalizedX[i][j] = normalizedPixel;
-        }
-    }
-
-    matrix<double> normalizedXt(numberOfPixels, vector<double>(images.size(), 0));
-
-    for (size_t i = 0; i < normalizedX.size(); ++i)
-        for (size_t j = 0; j < normalizedX[0].size(); ++j)
-            normalizedXt[j][i] = normalizedX[i][j];
-
-    matrix <double> covarianceMatrix = matrixMultiply(normalizedXt, normalizedX);
+    matrix<double> covarianceMatrix = transposeAndMultiplyWithItself(normalizedX);
 
     return covarianceMatrix;
+}
+
+template<typename T>
+matrix<T> transposeAndMultiplyWithItself(matrix<T> &A) {
+    matrix<double> ret(A[0].size(), vector<double>(A[0].size(), 0));
+
+    for (int i = 0; i < A[0].size(); ++i) {
+        for (int j = 0; j < A[0].size(); ++j) {
+            ret[i][j] = 0;
+            for (int k = 0; k < A.size(); ++k) {
+                //CHEQUEAR ESTO A VER SI ESTA BIEN
+                ret[i][j] += A[k][i] * A[k][i];
+            }
+        }
+    }
+    return matrix<T>();
 }
 
 void Model::getTC() {
@@ -185,22 +191,21 @@ void Model::getTC() {
     //arma V
     int numberOfPixels = _height * _width;
 
-    vector<pair<vector<double>,double>> eigenVectorsAndValues;
+    vector<pair<vector<double>, double>> eigenVectorsAndValues;
 
 
-    matrix<double> currentMatrix = datasetToMatrix(normalizedDataset);
+    matrix<double> currentMatrix = calculateCovarianceMatrix(normalizedDataset);
 
     for (int i = 0; i < _alpha; ++i) {
-        pair<vector<double>,double> currentEigenVectorsAndValues = powerMethod(currentMatrix);
+        pair<vector<double>, double> currentEigenVectorsAndValues = powerMethod(currentMatrix);
 
         eigenVectorsAndValues.push_back(currentEigenVectorsAndValues);
 
-        matrix<double> vvt = getMatrixFromVector(currentEigenVectorsAndValues.first);
+        matrix<double> vvt = vectorOuterProduct(currentEigenVectorsAndValues.first);
 
         vvt = matrixScalarMultiply(vvt, currentEigenVectorsAndValues.second);
 
-        vvt = matrixScalarMultiply(vvt, -1);
-
+        vvt = matrixScalarMultiply(vvt, (double) -1);
 
         currentMatrix = addMatrices(currentMatrix, vvt);
     }
@@ -215,8 +220,12 @@ void Model::getTC() {
     }
 }
 
+matrix<double> vectorMatrixMultiply(vector<double> v1, matrix<double> m1) {
+    return matrix<double>();
+}
+
 void Model::applyTCToDataset() {
-    int numberOfPixels = _height*_width;
+    int numberOfPixels = _height * _width;
     //Se cuenta con tc de tamaño numberOfPixels x alpha
     //hay que hacer XV
     //X tiene que ser normalizedDataset    
@@ -235,15 +244,14 @@ void Model::applyTCToDataset() {
 }
 
 
-
-
-
 pair<vector<double>, double> powerMethod(matrix<double> mat) {
-    vector<double> v (mat[0].size(),1);
+    vector<double> v(mat[0].size(), 1);
 
     int niter = 1000;
     for (int i = 0; i < niter; ++i) {
         v = matrixVectorMultiply(mat, v);
+        v = normalizeVector(v);
+
     }
 
     double lambda = vectorVectorMultiply(v, matrixVectorMultiply(mat, v))
@@ -254,8 +262,20 @@ pair<vector<double>, double> powerMethod(matrix<double> mat) {
     return ret;
 }
 
+template<typename T>
+vector<T> normalizeVector(vector<T> v) {
+    double sum = 0;
+    for (int i = 0; i < v.size(); ++i) {
+        sum += v[i];
+    }
+    for (int j = 0; j < v.size(); ++j) {
+        v[j] = v[j] / sum;
+    }
+    return v;
+}
+
 void Model::normalizeDataset() {
-    int numberOfPixels = _width*_height;
+    int numberOfPixels = _width * _height;
 
     vector<double> avg(numberOfPixels, 0);
 
@@ -265,29 +285,27 @@ void Model::normalizeDataset() {
         for (int i = 0; i < images.size(); ++i) {
             sum += images[i].first[j];
         }
-        avg[j] = (double)sum / (double)images.size();
+        avg[j] = (double) sum / (double) images.size();
     }
 
     averagePixels = avg;
     standardDeviation = sqrt((double) images.size() - 1);
 
-    Dataset<vector<double>> normalizedDataset;
-
     //Calculo cada imagen normalizada
     for (int i = 0; i < images.size(); ++i) {
         vector<double> currentNormalizedImage;
         for (int j = 0; j < numberOfPixels; ++j) {
-            double normalizedPixel = (((double)images[i].first[j]) - avg[j]) / standardDeviation;
+            double normalizedPixel = (((double) images[i].first[j]) - avg[j]) / standardDeviation;
             currentNormalizedImage.push_back(normalizedPixel);
         }
-        pair<vector<double>,int> normalizedTrainingInstance = make_pair(currentNormalizedImage, images[i].second);
+        pair<vector<double>, int> normalizedTrainingInstance = make_pair(currentNormalizedImage, images[i].second);
         normalizedDataset.push_back(normalizedTrainingInstance);
     }
 
 
 }
 
-matrix<double> matrixMultiply(matrix<double> m1, matrix<double> m2) {
+matrix<double> matrixMultiply(matrix<double> &m1, matrix<double> &m2) {
     assert(m1[0].size() == m2.size());
     matrix<double> ret(m1.size(), vector<double>(m2[0].size(), 0));
 
@@ -317,12 +335,50 @@ vector<double> matrixVectorMultiply(matrix<double> m1, vector<double> v1) {
 
 }
 
-matrix<double> vectorMatrixMultiply(vector<double> v1, matrix<double> m1) {
+double vectorVectorMultiply(vector<double> v1, vector<double> v2) {
 
 
 }
 
-double vectorVectorMultiply(vector<double> v1, vector<double> v2) {
 
+template<typename T>
+matrix<T> vectorOuterProduct(vector<T> v) {
+    matrix<T> ret(v.size(), vector<T>(v.size(), 0));
+    for (int i = 0; i < v.size(); ++i) {
+        for (int j = 0; j < v.size(); ++j) {
+            ret[i][j] = v[i] * v[j];
+        }
+    }
+    return ret;
+}
 
+template<typename T>
+matrix<T> matrixScalarMultiply(matrix<T> m, T s) {
+    matrix<T> ret(m.size(), vector<T>(m[0].size(), 0));
+
+    for (int i = 0; i < m.size(); ++i) {
+        for (int j = 0; j < m[0].size(); ++j) {
+            ret[i][j] = m[i][j] * s;
+        }
+    }
+
+    return ret;
+
+}
+
+template<typename T>
+matrix<T> addMatrices(matrix<T> A, matrix<T> B) {
+
+    assert(A.size() == B.size());
+    assert(A[0].size() == B[0].size());
+
+    matrix<T> ret(A.size(), vector<T>(A[0].size(), 0));
+
+    for (int i = 0; i < A.size(); ++i) {
+        for (int j = 0; j < A[0].size(); ++j) {
+            ret[i][j] = A[i][j] + B[i][j];
+        }
+    }
+
+    return ret;
 }

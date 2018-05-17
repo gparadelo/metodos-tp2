@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
     //Creamos una instancia de nuestra clase model y la instanciamos en modo SIMPLEKNN
     //Puede ser eso o PCAWITHKNN
     MODE mod;
-    if (*method == 1) { mod = PCAWITHKNN; }
+    if (stoi(method) == 1) { mod = PCAWITHKNN; }
     else              { mod = SIMPLEKNN; }
 
     Model simpleKnn(mod);
