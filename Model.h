@@ -104,7 +104,7 @@ matrix<double> matrixMultiply(matrix<double> &m1, matrix<double> &m2);
 
 vector<double> matrixVectorMultiply(const matrix<double> &m1, const vector<double> &v1);
 
-matrix<double> vectorMatrixMultiply(vector<double> v1, matrix<double> m1);
+vector<double> vectorMatrixMultiply(vector<double> v1, matrix<double> m1);
 
 double vectorVectorMultiply(vector<double> v1, vector<double> v2);
 

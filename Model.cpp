@@ -276,10 +276,6 @@ void Model::getTC(const Dataset<T>& src) {
     }
 }
 
-matrix<double> vectorMatrixMultiply(vector<double> v1, matrix<double> m1) {
-    return matrix<double>();
-}
-
 template<typename T, typename X>
 void Model::applyTCToDataset(Dataset<T> &dst, Dataset<X> &src) {
     assert(dst.size() == 0);
@@ -312,14 +308,15 @@ pair<vector<double>, double> powerMethod(const matrix<double> &mat) {
 
     assert(mat.size() == mat[0].size());
 
-    int niter = 100;
+    int niter = 1000;
     for (int i = 0; i < niter; ++i) {
         v = matrixVectorMultiply(mat, v);
         v = normalizeVector(v);
     }
 
-    double lambda = vectorVectorMultiply(v, matrixVectorMultiply(mat, v))
-                    / vectorVectorMultiply(v, v);
+    double vBv = (vectorVectorMultiply(v, matrixVectorMultiply(mat, v)));
+    double vtv = vectorVectorMultiply(v, v);
+    double lambda =  vBv / vtv;
 
     pair<vector<double>, double> ret = make_pair(v, lambda);
 
@@ -330,10 +327,10 @@ template<typename T>
 vector<T> normalizeVector(vector<T> v) {
     double sum = 0;
     for (int i = 0; i < v.size(); ++i) {
-        sum += v[i];
+        sum += pow(v[i], 2);
     }
     for (int j = 0; j < v.size(); ++j) {
-        v[j] = v[j] / sum;
+        v[j] = v[j] / sqrt(sum);
     }
     return v;
 }
@@ -368,14 +365,26 @@ vector<double> matrixVectorMultiply(const matrix<double> &m1, const vector<doubl
 
 }
 
+vector<double> vectorMatrixMultiply(vector<double> v1, matrix<double> m1) {
+    assert(v1.size() == m1.size());
+    vector<double> ret(m1[0].size(), 0);
+
+    for (int i = 0; i < m1.size(); ++i){
+        for(int j = 0; j < m1.size(); ++j){
+            ret[i] += v1[j] * m1[j][i];
+        }
+
+    }
+    return ret;
+}
+
 double vectorVectorMultiply(vector<double> v1, vector<double> v2) {
     assert(v1.size() == v2.size());
+    double sum = 0;
     for (int i = 0; i < v1.size(); ++i) {
-        for (int j = 0; j < v1.size(); ++j) {
-
-        }
+            sum += v1[i] * v2[i];
     }
-
+    return sum;
 }
 
 
