@@ -366,7 +366,7 @@ matrix<double> vectorMatrixMultiply(vector<double> v1, matrix<double> m1) {
 
     for (int i = 0; i < m1.size(); ++i){
         for(int j = 0; j < m1.size(); ++j){
-            ret[i] += v1[j] + m1[j][i];
+            ret[i] += v1[j] * m1[j][i];
         }
 
     }
@@ -378,7 +378,7 @@ double vectorVectorMultiply(vector<double> v1, vector<double> v2) { //Esto podr√
 
     double ret = 0;
     for (int i = 0; i < v1.size(); ++i ){
-            ret += v1[i] + v2[i];
+            ret += v1[i] * v2[i];
     }
 
     return ret;
