@@ -247,6 +247,7 @@ void Model::getTC(const Dataset<T>& src) {
     matrix<double> currentMatrix = calculateCovarianceMatrix(src);
 
     for (int i = 0; i < _alpha; ++i) {
+        cout << "Calculating eigenvector: " << i << "/" << _alpha <<endl;
         pair<vector<double>, double> currentEigenVectorsAndValues = powerMethod(currentMatrix);
 
         eigenVectorsAndValues.push_back(currentEigenVectorsAndValues);
@@ -259,6 +260,8 @@ void Model::getTC(const Dataset<T>& src) {
         vvt = matrixScalarMultiply(vvt, (double) -1);
 
         currentMatrix = addMatrices(currentMatrix, vvt);
+
+
     }
 
 
@@ -309,7 +312,7 @@ pair<vector<double>, double> powerMethod(const matrix<double> &mat) {
 
     assert(mat.size() == mat[0].size());
 
-    int niter = 10;
+    int niter = 100;
     for (int i = 0; i < niter; ++i) {
         v = matrixVectorMultiply(mat, v);
         v = normalizeVector(v);
@@ -366,7 +369,12 @@ vector<double> matrixVectorMultiply(const matrix<double> &m1, const vector<doubl
 }
 
 double vectorVectorMultiply(vector<double> v1, vector<double> v2) {
+    assert(v1.size() == v2.size());
+    for (int i = 0; i < v1.size(); ++i) {
+        for (int j = 0; j < v1.size(); ++j) {
 
+        }
+    }
 
 }
 
