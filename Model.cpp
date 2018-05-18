@@ -272,10 +272,6 @@ void Model::getTC(const Dataset<T>& src) {
     }
 }
 
-matrix<double> vectorMatrixMultiply(vector<double> v1, matrix<double> m1) {
-    return matrix<double>();
-}
-
 template<typename T, typename X>
 void Model::applyTCToDataset(Dataset<T> &dst, Dataset<X> &src) {
     assert(dst.size() == 0);
@@ -364,9 +360,28 @@ vector<double> matrixVectorMultiply(const matrix<double> &m1, const vector<doubl
 
 }
 
-double vectorVectorMultiply(vector<double> v1, vector<double> v2) {
+matrix<double> vectorMatrixMultiply(vector<double> v1, matrix<double> m1) {
+    assert(v1.size() == m1.size());
+    vector<double> ret(m1[0].size(), 0);
 
+    for (int i = 0; i < m1.size(); ++i){
+        for(int j = 0; j < m1.size(); ++j){
+            ret[i] += v1[j] + m1[j][i];
+        }
 
+    }
+    return matrix<double>();
+}
+
+double vectorVectorMultiply(vector<double> v1, vector<double> v2) { //Esto podría dar matrix en alguno de nuestros casos?
+    assert(v1.size() == v2.size());
+
+    double ret = 0;
+    for (int i = 0; i < v1.size(); ++i ){
+            ret += v1[i] + v2[i];
+    }
+
+    return ret;
 }
 
 
