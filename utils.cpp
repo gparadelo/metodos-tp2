@@ -2,7 +2,7 @@
 // Created by mike on 07/05/18.
 //
 
-#include "inutils.h"
+#include "utils.h"
 
 
 unsigned int get_pixel_average(uchar* data, int i, int j, int height, int width){

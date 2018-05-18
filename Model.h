@@ -87,7 +87,7 @@ template <typename T>
 matrix<T> vectorOuterProduct(vector<T>);
 
 template <typename T>
-matrix<T> matrixScalarMultiply(matrix<T>, T);
+matrix<T> matrixScalarMultiply(const matrix<T> &, T);
 
 template <typename T>
 matrix<T> addMatrices(matrix<T>,matrix<T>);

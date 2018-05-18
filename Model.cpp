@@ -3,7 +3,7 @@
 //
 
 #include "Model.h"
-#include "inutils.h"
+#include "utils.h"
 
 Model::Model(MODE mode) : mode(mode) {
 
@@ -32,6 +32,9 @@ void Model::evaluate(const char *testDatasetName) {
 
         Dataset<vector<double>> reducedTestSet;
         applyTCToDataset(reducedTestSet, normalizedTestSet);
+
+        assert(reducedTestSet.size() == normalizedTestSet.size());
+        assert(reducedTestSet[0].first.size() == reducedDataset[0].first.size());
 
         for (int i = 0; i < reducedTestSet.size(); ++i) {
             people.push_back(kNearestNeighbors(reducedDataset, reducedTestSet[i].first));
@@ -159,8 +162,8 @@ int Model::kNearestNeighbors(Dataset<X> datasetToValidateAgainst, T newImage) {
     }
 
     for (int i = 0; i < datasetToValidateAgainst.size(); ++i) {
-        pair<double, int> dist = make_pair(getSquaredNorm(datasetToValidateAgainst[i].first, newImage, size),
-                                 (int)datasetToValidateAgainst[i].second);
+        double squaredNorm = getSquaredNorm(datasetToValidateAgainst[i].first, newImage, size);
+        pair<double, int> dist = make_pair(squaredNorm, (int)datasetToValidateAgainst[i].second);
         distances.push_back(dist);
     }
 
@@ -230,7 +233,6 @@ matrix<T> transposeAndMultiplyWithItself(const matrix<T> &A) {
                 //CHEQUEAR ESTO A VER SI ESTA BIEN
                 ret[i][j] += A[k][i] * A[k][j];
             }
-            ret[i][j] *= (A.size() - 1);
         }
     }
     return ret;
@@ -261,7 +263,7 @@ void Model::getTC(const Dataset<T>& src) {
 
         currentMatrix = addMatrices(currentMatrix, vvt);
 
-
+        cout << currentEigenVectorsAndValues.second << endl;
     }
 
 
@@ -308,7 +310,7 @@ pair<vector<double>, double> powerMethod(const matrix<double> &mat) {
 
     assert(mat.size() == mat[0].size());
 
-    int niter = 1000;
+    int niter = 5000;
     for (int i = 0; i < niter; ++i) {
         v = matrixVectorMultiply(mat, v);
         v = normalizeVector(v);
@@ -400,7 +402,7 @@ matrix<T> vectorOuterProduct(vector<T> v) {
 }
 
 template<typename T>
-matrix<T> matrixScalarMultiply(matrix<T> m, T s) {
+matrix<T> matrixScalarMultiply(const matrix<T> &m, T s) {
     matrix<T> ret(m.size(), vector<T>(m[0].size(), 0));
 
     for (int i = 0; i < m.size(); ++i) {

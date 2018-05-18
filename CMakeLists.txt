@@ -6,6 +6,6 @@ set(CMAKE_CXX_STANDARD 11)
 set(SOURCE_FILES
         main.cpp
         ppmloader/ppmloader.cpp
-        ppmloader/ppmloader.h inutils.cpp inutils.h Model.cpp Model.h)
+        ppmloader/ppmloader.h utils.cpp utils.h Model.cpp Model.h)
 
 add_executable(caralibro ${SOURCE_FILES})

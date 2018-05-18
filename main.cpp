@@ -1,5 +1,5 @@
 #include <iostream>
-#include "inutils.h"
+#include "utils.h"
 #include "Model.h"
 #include <fstream>
 #include <chrono>
@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
     Model pcaWithKnn(mod);
 
     pcaWithKnn.setK(10);
-    pcaWithKnn.setAlpha(10);
+    pcaWithKnn.setAlpha(15);
 
 //    Le pasamos la direccion al dataset de training
 
