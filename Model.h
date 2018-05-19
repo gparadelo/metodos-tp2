@@ -80,6 +80,9 @@ private:
     matrix<double> tc;
     vector<double> averagePixels;
     double standardDeviation;
+
+    template <typename T>
+    void printMatrix(T);
 };
 
 

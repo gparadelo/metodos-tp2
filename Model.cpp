@@ -135,7 +135,7 @@ void Model::loadDataset(const char *trainDatasetName, Dataset<uchar *> *dest) {
         if (input.peek() != '/n') {
             char stringClass[2] = {0};
             input.ignore(1, ' ');
-            input.getline(stringClass, 2, ',');
+            input >> stringClass;
             intClass = stoi(stringClass);
         }
         pair<uchar *, int> trainingInstance = make_pair(data, intClass);
@@ -143,6 +143,8 @@ void Model::loadDataset(const char *trainDatasetName, Dataset<uchar *> *dest) {
 
         input.ignore(1, '/n');
     }
+
+    cout << "Dataset size: " << dest->size() << endl;
 }
 
 
@@ -218,10 +220,14 @@ bool pairCompare(pair<int, int> i, pair<int, int> j) {
 matrix<double> Model::calculateCovarianceMatrix(const Dataset<vector<double>> &X) {
 
     matrix<double> normalizedX = datasetToMatrix(X);
+
+//    printMatrix(normalizedX);
+
     matrix<double> covarianceMatrix = transposeAndMultiplyWithItself(normalizedX);
 
     return covarianceMatrix;
 }
+
 
 template<typename T>
 matrix<T> transposeAndMultiplyWithItself(const matrix<T> &A) {
@@ -246,10 +252,11 @@ void Model::getTC(const Dataset<T>& src) {
 
     vector<pair<vector<double>, double>> eigenVectorsAndValues;
 
+
     matrix<double> currentMatrix = calculateCovarianceMatrix(src);
 
     for (int i = 0; i < _alpha; ++i) {
-        cout << "Calculating eigenvector: " << i << "/" << _alpha <<endl;
+        cout << "Calculating eigenvector: " << i + 1 << "/" << _alpha <<endl;
         pair<vector<double>, double> currentEigenVectorsAndValues = powerMethod(currentMatrix);
 
         eigenVectorsAndValues.push_back(currentEigenVectorsAndValues);
@@ -263,7 +270,7 @@ void Model::getTC(const Dataset<T>& src) {
 
         currentMatrix = addMatrices(currentMatrix, vvt);
 
-        cout << currentEigenVectorsAndValues.second << endl;
+        cout << "root of the eigenvalue that should match the tests: " << sqrt(currentEigenVectorsAndValues.second) << endl;
     }
 
 
@@ -303,6 +310,22 @@ void Model::applyTCToDataset(Dataset<T> &dst, Dataset<X> &src) {
 
 }
 
+template<typename T>
+
+void Model::printMatrix(T A) {
+    cout <<"[";
+    for (int i = 0; i < A.size(); ++i) {
+        for (int j = 0; j < A[0].size(); ++j) {
+          cout << A[i][j] << " ";
+        }
+        if(i < A.size() - 1){
+            cout <<";";
+        }
+    }
+    cout <<"]" << endl;
+
+}
+
 pair<vector<double>, double> powerMethod(const matrix<double> &mat) {
     vector<double> v(mat[0].size(), 1);
 
@@ -311,13 +334,19 @@ pair<vector<double>, double> powerMethod(const matrix<double> &mat) {
     assert(mat.size() == mat[0].size());
 
     int niter = 5000;
-    for (int i = 0; i < niter; ++i) {
-        v = matrixVectorMultiply(mat, v);
-        v = normalizeVector(v);
+    while(true){
+        vector<double> newV = matrixVectorMultiply(mat, v);
+        newV = normalizeVector(newV);
+
+        if(getSquaredNorm(newV,v,v.size()) < 10e-7){
+            break;
+        }
+        v = newV;
     }
 
     double vBv = (vectorVectorMultiply(v, matrixVectorMultiply(mat, v)));
     double vtv = vectorVectorMultiply(v, v);
+//    cout << "vBv: "<< vBv << "          vtv: " << vtv << endl;
     double lambda =  vBv / vtv;
 
     pair<vector<double>, double> ret = make_pair(v, lambda);
@@ -337,20 +366,6 @@ vector<T> normalizeVector(vector<T> v) {
     return v;
 }
 
-matrix<double> matrixMultiply(matrix<double> &m1, matrix<double> &m2) {
-    assert(m1[0].size() == m2.size());
-    matrix<double> ret(m1.size(), vector<double>(m2[0].size(), 0));
-
-    for (int i = 0; i < m1.size(); ++i) {
-        for (int j = 0; j < m2[0].size(); ++j) {
-            for (int k = 0; k < m2.size(); ++k) {
-                ret[i][j] += m1[i][k] * m2[k][j];
-            }
-        }
-    }
-
-    return ret;
-}
 
 vector<double> matrixVectorMultiply(const matrix<double> &m1, const vector<double> &v1) {
     assert(m1[0].size() == v1.size());
@@ -365,19 +380,6 @@ vector<double> matrixVectorMultiply(const matrix<double> &m1, const vector<doubl
 
     return ret;
 
-}
-
-vector<double> vectorMatrixMultiply(vector<double> v1, matrix<double> m1) {
-    assert(v1.size() == m1.size());
-    vector<double> ret(m1[0].size(), 0);
-
-    for (int i = 0; i < m1.size(); ++i){
-        for(int j = 0; j < m1.size(); ++j){
-            ret[i] += v1[j] * m1[j][i];
-        }
-
-    }
-    return ret;
 }
 
 double vectorVectorMultiply(vector<double> v1, vector<double> v2) {
