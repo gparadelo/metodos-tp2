@@ -43,7 +43,6 @@ void Model::evaluate(const char *testDatasetName) {
         cout << endl;
 
 
-
     } else {
         for (int i = 0; i < testSet.size(); ++i) {
             rawPredictions.push_back(kNearestNeighbors(images, testSet[i].first));
@@ -152,10 +151,6 @@ void Model::loadDataset(const char *trainDatasetName, Dataset<uchar *> *dest) {
 //    cout << "Dataset size: " << dest->size() << endl;
 }
 
-
-void Model::outputResults(const char *outputFileName) {
-
-}
 
 template<typename T, typename X>
 int Model::kNearestNeighbors(Dataset<X> datasetToValidateAgainst, T newImage) {
@@ -463,6 +458,10 @@ void Model::analyzePredictions(vector<int> rawPredictions, Dataset<T> testSet) {
             p.fp = 0;
             p.tn = 0;
             p.tp = 0;
+            p.accurracy = 0;
+            p.precision = 0;
+            p.recall = 0;
+            p.f1 = 0;
             classMetrics.insert(pair<int, metric>(images[i].second, p));
         };
     }
@@ -474,28 +473,73 @@ void Model::analyzePredictions(vector<int> rawPredictions, Dataset<T> testSet) {
         assert(real != 0);
         assert(predicted != 0);
 
-        cout << "predicted: " << predicted << " should have been: " << real <<endl;
-        if(real == predicted) {
+        cout << "predicted: " << predicted << " should have been: " << real << endl;
+        if (real == predicted) {
             assert(classMetrics[real].realClass == real);
             classMetrics[real].tp += 1;
-            for (int i = 1; i < classMetrics.size(); ++i) {
-                if(i != real){
-                    classMetrics[i].tn += 1;
+            for (int i = 0; i < classMetrics.size(); ++i) {
+                if (i + 1 != real) {
+                    classMetrics[i + 1].tn += 1;
                 }
             }
         }
-        if(real != predicted) {
+        if (real != predicted) {
             assert(classMetrics[real].realClass == real);
             classMetrics[real].fn += 1;
             classMetrics[predicted].fp += 1;
-            for (int i = 1; i < classMetrics.size(); ++i) {
-                if(i !=  real && i != predicted){
-                    classMetrics[i].tn += 1;
+            for (int i = 0; i < classMetrics.size(); ++i) {
+                if ((i + 1) != real && (i + 1) != predicted) {
+                    classMetrics[i + 1].tn += 1;
                 }
             }
         }
     }
 
+    for (int k = 0; k < classMetrics.size(); ++k) {
+        int i = k + 1;
+
+        metric currentMetric = classMetrics[i];
+        currentMetric.accurracy = (double) (currentMetric.tp + currentMetric.tn) /
+                                  (double) (currentMetric.tp + currentMetric.tn + currentMetric.fn + currentMetric.fp);
+
+
+        currentMetric.precision =(currentMetric.tp + currentMetric.fp) == 0? 1 : (double) (currentMetric.tp) /
+                                  (double) (currentMetric.tp + currentMetric.fp);
+
+        currentMetric.recall = (currentMetric.tp + currentMetric.fn) ==0 ? 1 : (double) (currentMetric.tp) /
+                               (double) (currentMetric.tp + currentMetric.fn);
+
+        currentMetric.f1 = currentMetric.precision + currentMetric.recall == 0 ? 1 : ((currentMetric.precision * currentMetric.recall) /
+                (currentMetric.precision + currentMetric.recall));
+
+        classMetrics[i] = currentMetric;
+
+    }
+
+
+    averageAccurracy = 0;
+    averageRecall = 0;
+    averagePrecision = 0;
+    averageF1 = 0;
+
+    for (int l = 0; l < classMetrics.size(); ++l) {
+        int i = l+1;
+        averageAccurracy  += classMetrics[i].accurracy;
+        averagePrecision  += classMetrics[i].precision;
+        averageRecall  += classMetrics[i].recall;
+        averageF1  += classMetrics[i].f1;
+    }
+
+    averageAccurracy /= classMetrics.size();
+    averagePrecision /= classMetrics.size();
+    averageRecall /= classMetrics.size();
+    averageF1 /= classMetrics.size();
+
+
+}
+
+void Model::outputResults() {
+    *outputFile << _k << ";" << _alpha << ";"<< averageAccurracy << ";"<< averagePrecision << ";"<< averageRecall<< ";"<< averageF1 << endl;
 }
 
 

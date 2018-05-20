@@ -30,6 +30,10 @@ typedef struct metric{
     int fn;
     int tp;
     int tn;
+    double accurracy;
+    double precision;
+    double recall;
+    double f1;
 };
 
 
@@ -52,7 +56,7 @@ public:
 
     void train(const char * string);
 
-    void outputResults(const char * string);
+    void outputResults();
 
     matrix<double> calculateCovarianceMatrix(const Dataset<vector<double>> &X);
 
@@ -99,6 +103,13 @@ private:
 
     template <typename T>
     void analyzePredictions(vector<int> rawPredictions, Dataset<T> testSet);
+
+
+    double averageAccurracy ;
+    double averageRecall ;
+    double averagePrecision ;
+    double averageF1;
+
 };
 
 

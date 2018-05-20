@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
 
 
 //    Le pasamos el archivo donde guardarlos
-//  ourModel.outputResults("path/to/results.csv");
+  ourModel.outputResults();
 
 
     return 0;
