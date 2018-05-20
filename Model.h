@@ -13,6 +13,8 @@
 #include <utility>
 #include <algorithm>
 #include <cmath>
+#include <map>
+
 
 using namespace std;
 
@@ -20,6 +22,16 @@ typedef enum {
     SIMPLEKNN = 0,
     PCAWITHKNN = 1
 } MODE;
+
+
+typedef struct metric{
+    int realClass;
+    int fp;
+    int fn;
+    int tp;
+    int tn;
+};
+
 
 template <typename T>
 using matrix = vector<vector<T>>;
@@ -44,9 +56,7 @@ public:
 
     matrix<double> calculateCovarianceMatrix(const Dataset<vector<double>> &X);
 
-    //podria querer cambiar MODE desde acá
-
-    //podriamos tener observador de _images
+    void setOutputFile(ofstream&);
 
 private:
     MODE mode;
@@ -54,8 +64,9 @@ private:
     unsigned int _k;
     unsigned int _width;
     unsigned int _height;
-    void loadDataset(const char *trainDatasetName, Dataset<uchar*>* dest);
 
+
+    void loadDataset(const char *trainDatasetName, Dataset<uchar*>* dest);
 
     template <typename T, typename X>
     int  kNearestNeighbors(Dataset<X> datasetToValidateAgainst, T newImage);
@@ -72,17 +83,22 @@ private:
     template <typename T, typename X>
     void applyTCToDataset(Dataset<T>& dest, Dataset<X>& src);
 
+
     matrix<double> datasetToMatrix(const Dataset<vector<double>> &D);
-
-
     Dataset<uchar*> images;
     Dataset<vector<double>> reducedDataset;
     matrix<double> tc;
     vector<double> averagePixels;
+
     double standardDeviation;
 
     template <typename T>
     void printMatrix(T);
+
+    ofstream* outputFile;
+
+    template <typename T>
+    void analyzePredictions(vector<int> rawPredictions, Dataset<T> testSet);
 };
 
 

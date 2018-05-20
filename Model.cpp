@@ -23,7 +23,7 @@ void Model::evaluate(const char *testDatasetName) {
     Dataset<uchar *> testSet;
     loadDataset(testDatasetName, &testSet);
 
-    vector<int> people;
+    vector<int> rawPredictions;
     assert(_k <= images.size());
 
     if (mode == PCAWITHKNN) {
@@ -37,18 +37,22 @@ void Model::evaluate(const char *testDatasetName) {
         assert(reducedTestSet[0].first.size() == reducedDataset[0].first.size());
 
         for (int i = 0; i < reducedTestSet.size(); ++i) {
-            people.push_back(kNearestNeighbors(reducedDataset, reducedTestSet[i].first));
-            cout << people[i] << " ";
+            rawPredictions.push_back(kNearestNeighbors(reducedDataset, reducedTestSet[i].first));
+//            cout << rawPredictions[i] << " ";
         }
         cout << endl;
 
+
+
     } else {
         for (int i = 0; i < testSet.size(); ++i) {
-            people.push_back(kNearestNeighbors(images, testSet[i].first));
-            cout << people[i] << " ";
+            rawPredictions.push_back(kNearestNeighbors(images, testSet[i].first));
+//            cout << rawPredictions[i] << " ";
         }
         cout << endl;
     }
+
+    analyzePredictions(rawPredictions, testSet);
 }
 
 
@@ -66,7 +70,7 @@ void Model::train(const char *trainDatasetName) {
         //Signature meaning: destination, source
         applyTCToDataset(reducedDataset, normalizedDataset);
 
-      //matrix<double> covariance = calculateCovarianceMatrix(reducedDataset);
+        //matrix<double> covariance = calculateCovarianceMatrix(reducedDataset);
         //Tendria que dar diagonal?
     }
 }
@@ -100,7 +104,7 @@ void Model::normalizeDataset(Dataset<vector<double>> &dst, const Dataset<X> &src
             double normalizedPixel = (((double) src[i].first[j]) - averagePixels[j]) / standardDeviation;
             currentNormalizedImage.push_back(normalizedPixel);
         }
-        pair<vector<double>, int> normalizedTrainingInstance = make_pair(currentNormalizedImage, (int)src[i].second);
+        pair<vector<double>, int> normalizedTrainingInstance = make_pair(currentNormalizedImage, (int) src[i].second);
         dst.push_back(normalizedTrainingInstance);
     }
 }
@@ -136,6 +140,7 @@ void Model::loadDataset(const char *trainDatasetName, Dataset<uchar *> *dest) {
             char stringClass[2] = {0};
             input.ignore(1, ' ');
             input >> stringClass;
+//            cout << stringClass;
             intClass = stoi(stringClass);
         }
         pair<uchar *, int> trainingInstance = make_pair(data, intClass);
@@ -144,7 +149,7 @@ void Model::loadDataset(const char *trainDatasetName, Dataset<uchar *> *dest) {
         input.ignore(1, '/n');
     }
 
-    cout << "Dataset size: " << dest->size() << endl;
+//    cout << "Dataset size: " << dest->size() << endl;
 }
 
 
@@ -165,7 +170,7 @@ int Model::kNearestNeighbors(Dataset<X> datasetToValidateAgainst, T newImage) {
 
     for (int i = 0; i < datasetToValidateAgainst.size(); ++i) {
         double squaredNorm = getSquaredNorm(datasetToValidateAgainst[i].first, newImage, size);
-        pair<double, int> dist = make_pair(squaredNorm, (int)datasetToValidateAgainst[i].second);
+        pair<double, int> dist = make_pair(squaredNorm, (int) datasetToValidateAgainst[i].second);
         distances.push_back(dist);
     }
 
@@ -245,7 +250,7 @@ matrix<T> transposeAndMultiplyWithItself(const matrix<T> &A) {
 }
 
 template<typename T>
-void Model::getTC(const Dataset<T>& src) {
+void Model::getTC(const Dataset<T> &src) {
     //Get TC tiene que aplicar el método de la potencia para conseguir los alpha autovectores
     //arma V
     int numberOfPixels = _height * _width;
@@ -256,7 +261,7 @@ void Model::getTC(const Dataset<T>& src) {
     matrix<double> currentMatrix = calculateCovarianceMatrix(src);
 
     for (int i = 0; i < _alpha; ++i) {
-        cout << "Calculating eigenvector: " << i + 1 << "/" << _alpha <<endl;
+        cout << "Calculating eigenvector: " << i + 1 << "/" << _alpha << endl;
         pair<vector<double>, double> currentEigenVectorsAndValues = powerMethod(currentMatrix);
 
         eigenVectorsAndValues.push_back(currentEigenVectorsAndValues);
@@ -270,7 +275,8 @@ void Model::getTC(const Dataset<T>& src) {
 
         currentMatrix = addMatrices(currentMatrix, vvt);
 
-        cout << "root of the eigenvalue that should match the tests: " << sqrt(currentEigenVectorsAndValues.second) << endl;
+        cout << "root of the eigenvalue that should match the tests: " << sqrt(currentEigenVectorsAndValues.second)
+             << endl;
     }
 
 
@@ -304,7 +310,7 @@ void Model::applyTCToDataset(Dataset<T> &dst, Dataset<X> &src) {
             }
             currentVector.push_back(currentValue);
         }
-        pair<vector<double>, int> reducedTrainingInstance = make_pair(currentVector, (int)src[i].second);
+        pair<vector<double>, int> reducedTrainingInstance = make_pair(currentVector, (int) src[i].second);
         dst.push_back(reducedTrainingInstance);
     }
 
@@ -313,17 +319,21 @@ void Model::applyTCToDataset(Dataset<T> &dst, Dataset<X> &src) {
 template<typename T>
 
 void Model::printMatrix(T A) {
-    cout <<"[";
+    cout << "[";
     for (int i = 0; i < A.size(); ++i) {
         for (int j = 0; j < A[0].size(); ++j) {
-          cout << A[i][j] << " ";
+            cout << A[i][j] << " ";
         }
-        if(i < A.size() - 1){
-            cout <<";";
+        if (i < A.size() - 1) {
+            cout << ";";
         }
     }
-    cout <<"]" << endl;
+    cout << "]" << endl;
 
+}
+
+void Model::setOutputFile(ofstream &oFile) {
+    outputFile = &oFile;
 }
 
 pair<vector<double>, double> powerMethod(const matrix<double> &mat) {
@@ -334,11 +344,11 @@ pair<vector<double>, double> powerMethod(const matrix<double> &mat) {
     assert(mat.size() == mat[0].size());
 
     int niter = 5000;
-    while(true){
+    while (true) {
         vector<double> newV = matrixVectorMultiply(mat, v);
         newV = normalizeVector(newV);
 
-        if(getSquaredNorm(newV,v,v.size()) < 10e-7){
+        if (getSquaredNorm(newV, v, v.size()) < 10e-7) {
             break;
         }
         v = newV;
@@ -347,7 +357,7 @@ pair<vector<double>, double> powerMethod(const matrix<double> &mat) {
     double vBv = (vectorVectorMultiply(v, matrixVectorMultiply(mat, v)));
     double vtv = vectorVectorMultiply(v, v);
 //    cout << "vBv: "<< vBv << "          vtv: " << vtv << endl;
-    double lambda =  vBv / vtv;
+    double lambda = vBv / vtv;
 
     pair<vector<double>, double> ret = make_pair(v, lambda);
 
@@ -366,7 +376,6 @@ vector<T> normalizeVector(vector<T> v) {
     return v;
 }
 
-
 vector<double> matrixVectorMultiply(const matrix<double> &m1, const vector<double> &v1) {
     assert(m1[0].size() == v1.size());
 
@@ -382,15 +391,15 @@ vector<double> matrixVectorMultiply(const matrix<double> &m1, const vector<doubl
 
 }
 
+
 double vectorVectorMultiply(vector<double> v1, vector<double> v2) {
     assert(v1.size() == v2.size());
     double sum = 0;
     for (int i = 0; i < v1.size(); ++i) {
-            sum += v1[i] * v2[i];
+        sum += v1[i] * v2[i];
     }
     return sum;
 }
-
 
 template<typename T>
 matrix<T> vectorOuterProduct(vector<T> v) {
@@ -402,6 +411,7 @@ matrix<T> vectorOuterProduct(vector<T> v) {
     }
     return ret;
 }
+
 
 template<typename T>
 matrix<T> matrixScalarMultiply(const matrix<T> &m, T s) {
@@ -433,3 +443,59 @@ matrix<T> addMatrices(matrix<T> A, matrix<T> B) {
 
     return ret;
 }
+
+template<typename T>
+void Model::analyzePredictions(vector<int> rawPredictions, Dataset<T> testSet) {
+    //Need to get true/false positives/negatives
+
+    map<int, metric> classMetrics;
+
+    //Init
+    for (int i = 0; i < images.size(); ++i) {
+        bool write = true;
+        if (classMetrics.find(images[i].second) != classMetrics.end()) {
+            bool write = false;
+        }
+        if (write) {
+            metric p;
+            p.realClass = images[i].second;
+            p.fn = 0;
+            p.fp = 0;
+            p.tn = 0;
+            p.tp = 0;
+            classMetrics.insert(pair<int, metric>(images[i].second, p));
+        };
+    }
+
+
+    for (int j = 0; j < rawPredictions.size(); ++j) {
+        int real = testSet[j].second;
+        int predicted = rawPredictions[j];
+        assert(real != 0);
+        assert(predicted != 0);
+
+        cout << "predicted: " << predicted << " should have been: " << real <<endl;
+        if(real == predicted) {
+            assert(classMetrics[real].realClass == real);
+            classMetrics[real].tp += 1;
+            for (int i = 1; i < classMetrics.size(); ++i) {
+                if(i != real){
+                    classMetrics[i].tn += 1;
+                }
+            }
+        }
+        if(real != predicted) {
+            assert(classMetrics[real].realClass == real);
+            classMetrics[real].fn += 1;
+            classMetrics[predicted].fp += 1;
+            for (int i = 1; i < classMetrics.size(); ++i) {
+                if(i !=  real && i != predicted){
+                    classMetrics[i].tn += 1;
+                }
+            }
+        }
+    }
+
+}
+
+

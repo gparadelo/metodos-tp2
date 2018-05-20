@@ -43,6 +43,11 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
+    if (!cmdOptionExists(argv, argv + argc, "-o")) {
+        cout << "necesito: -o <outputPreditionsFileName>";
+        return 0;
+    }
+
 
     char *method = getCmdOption(argv,argv + argc, "-m");
 
@@ -50,29 +55,37 @@ int main(int argc, char *argv[]) {
 
     char *testSetName = getCmdOption(argv, argv + argc, "-q");
 
+    char *outputPreditionsFileName = getCmdOption(argv, argv + argc, "-o");
+
+    ofstream outputFile;
+
+    outputFile.open(outputPreditionsFileName);
+
+
     //Creamos una instancia de nuestra clase model y la instanciamos en modo SIMPLEKNN
     //Puede ser eso o PCAWITHKNN
     MODE mod;
     if (stoi(method) == 1) { mod = PCAWITHKNN; }
     else              { mod = SIMPLEKNN; }
 
-    Model pcaWithKnn(mod);
+    Model ourModel(mod);
 
-    pcaWithKnn.setK(10);
-    pcaWithKnn.setAlpha(15);
+    ourModel.setK(10);
+    ourModel.setAlpha(15);
+    ourModel.setOutputFile(outputFile);
 
 //    Le pasamos la direccion al dataset de training
 
-    pcaWithKnn.train(trainSetName);
+    ourModel.train(trainSetName);
 
-//  SavePPMFile("../test.ppm", pcaWithKnn.images[0].first, 92, 112,PPM_LOADER_PIXEL_TYPE_GRAY_8B, " ");
+//  SavePPMFile("../test.ppm", ourModel.images[0].first, 92, 112,PPM_LOADER_PIXEL_TYPE_GRAY_8B, " ");
 
 //    Evaluamos los tests y el modelo se guarda adentro los resultados
-    pcaWithKnn.evaluate(testSetName);
+    ourModel.evaluate(testSetName);
 
 
 //    Le pasamos el archivo donde guardarlos
-//  pcaWithKnn.outputResults("path/to/results.csv");
+//  ourModel.outputResults("path/to/results.csv");
 
 
     return 0;
