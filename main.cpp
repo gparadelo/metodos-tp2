@@ -43,12 +43,6 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    if (!cmdOptionExists(argv, argv + argc, "-o")) {
-        cout << "necesito: -o <outputPreditionsFileName>";
-        return 0;
-    }
-
-
     char *method = getCmdOption(argv,argv + argc, "-m");
 
     char *trainSetName = getCmdOption(argv, argv + argc, "-i");
@@ -69,7 +63,6 @@ int main(int argc, char *argv[]) {
     char *outputTimesFileName = getCmdOption(argv, argv + argc, "-time");
 
     char *outputPredictionsFileName = getCmdOption(argv, argv + argc, "-o");
-
 
 
 
@@ -105,7 +98,7 @@ int main(int argc, char *argv[]) {
 
 
 //    Le pasamos el archivo donde guardarlos
-  ourModel.outputResults();
+    ourModel.outputResults();
 
 
     return 0;
