@@ -43,23 +43,29 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    if (!cmdOptionExists(argv, argv + argc, "-o")) {
-        cout << "necesito: -o <outputPreditionsFileName>";
-        return 0;
-    }
-
-
     char *method = getCmdOption(argv,argv + argc, "-m");
 
     char *trainSetName = getCmdOption(argv, argv + argc, "-i");
 
     char *testSetName = getCmdOption(argv, argv + argc, "-q");
 
-    char *outputPreditionsFileName = getCmdOption(argv, argv + argc, "-o");
 
+
+
+
+    streambuf * buf;
     ofstream outputFile;
 
-    outputFile.open(outputPreditionsFileName);
+    if(cmdOptionExists(argv, argv + argc, "-o")) {
+        char *outputPredictionsFileName = getCmdOption(argv, argv + argc, "-o");
+        outputFile.open(outputPredictionsFileName);
+        buf = outputFile.rdbuf();
+    } else {
+        buf = cout.rdbuf();
+    }
+
+    std::ostream out(buf);
+
 
 
     //Creamos una instancia de nuestra clase model y la instanciamos en modo SIMPLEKNN
@@ -85,7 +91,7 @@ int main(int argc, char *argv[]) {
 
 
 //    Le pasamos el archivo donde guardarlos
-  ourModel.outputResults();
+    ourModel.outputResults();
 
 
     return 0;

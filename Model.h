@@ -73,7 +73,7 @@ private:
     void loadDataset(const char *trainDatasetName, Dataset<uchar*>* dest);
 
     template <typename T, typename X>
-    int  kNearestNeighbors(Dataset<X> datasetToValidateAgainst, T newImage);
+    int  kNearestNeighbors(const Dataset<X>& datasetToValidateAgainst, T newImage);
 
     template <typename T>
     void getTC(const Dataset<T>&);
@@ -114,19 +114,19 @@ private:
 
 
 template <typename T>
-matrix<T> vectorOuterProduct(vector<T>);
+matrix<T> vectorOuterProduct(const vector<T>&);
 
 template <typename T>
 matrix<T> matrixScalarMultiply(const matrix<T> &, T);
 
 template <typename T>
-matrix<T> addMatrices(matrix<T>,matrix<T>);
+matrix<T> addMatrices(const matrix<T>&, const matrix<T>&);
 
 template <typename T>
-vector<T> normalizeVector(vector<T>);
+vector<T> normalizeVector(vector<T>&);
 
 template <typename T>
-double getSquaredNorm(T &v1, T &v2, int size);
+double getSquaredNorm(const T &v1, const T &v2, int size);
 
 bool pairCompare(pair<int, int> i, pair<int, int> j);
 
@@ -136,7 +136,7 @@ vector<double> matrixVectorMultiply(const matrix<double> &m1, const vector<doubl
 
 vector<double> vectorMatrixMultiply(vector<double> v1, matrix<double> m1);
 
-double vectorVectorMultiply(vector<double> v1, vector<double> v2);
+double vectorVectorMultiply(const vector<double>& v1, const vector<double>& v2);
 
 pair<vector<double>, double> powerMethod(const matrix<double> &mat);
 

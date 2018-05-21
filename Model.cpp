@@ -153,7 +153,7 @@ void Model::loadDataset(const char *trainDatasetName, Dataset<uchar *> *dest) {
 
 
 template<typename T, typename X>
-int Model::kNearestNeighbors(Dataset<X> datasetToValidateAgainst, T newImage) {
+int Model::kNearestNeighbors(const Dataset<X>& datasetToValidateAgainst, T newImage) {
     vector<pair<double, int> > distances;
 
     int size;
@@ -203,7 +203,7 @@ matrix<double> Model::datasetToMatrix(const Dataset<vector<double>> &D) {
 }
 
 template<typename T>
-double getSquaredNorm(T &v1, T &v2, int size) {
+double getSquaredNorm(const T &v1, const T &v2, int size) {
     double distance = 0;
 
     for (int i = 0; i < size; ++i) {
@@ -360,7 +360,7 @@ pair<vector<double>, double> powerMethod(const matrix<double> &mat) {
 }
 
 template<typename T>
-vector<T> normalizeVector(vector<T> v) {
+vector<T> normalizeVector(vector<T>& v) {
     double sum = 0;
     for (int i = 0; i < v.size(); ++i) {
         sum += pow(v[i], 2);
@@ -387,7 +387,7 @@ vector<double> matrixVectorMultiply(const matrix<double> &m1, const vector<doubl
 }
 
 
-double vectorVectorMultiply(vector<double> v1, vector<double> v2) {
+double vectorVectorMultiply(const vector<double>& v1, const vector<double>& v2) {
     assert(v1.size() == v2.size());
     double sum = 0;
     for (int i = 0; i < v1.size(); ++i) {
@@ -397,7 +397,7 @@ double vectorVectorMultiply(vector<double> v1, vector<double> v2) {
 }
 
 template<typename T>
-matrix<T> vectorOuterProduct(vector<T> v) {
+matrix<T> vectorOuterProduct(const vector<T>& v) {
     matrix<T> ret(v.size(), vector<T>(v.size(), 0));
     for (int i = 0; i < v.size(); ++i) {
         for (int j = 0; j < v.size(); ++j) {
@@ -423,7 +423,7 @@ matrix<T> matrixScalarMultiply(const matrix<T> &m, T s) {
 }
 
 template<typename T>
-matrix<T> addMatrices(matrix<T> A, matrix<T> B) {
+matrix<T> addMatrices(const matrix<T>& A, const matrix<T>& B) {
 
     assert(A.size() == B.size());
     assert(A[0].size() == B[0].size());
