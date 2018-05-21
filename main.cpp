@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
 
     char *outputMetricsFileName = getCmdOption(argv, argv + argc, "-metrics");
 
-    char *outputTimesFileName = getCmdOption(argv, argv + argc, "-time");
+    char *timeFileName = getCmdOption(argv, argv + argc, "-time");
 
     char *outputPredictionsFileName = getCmdOption(argv, argv + argc, "-o");
 
@@ -76,17 +76,23 @@ int main(int argc, char *argv[]) {
     ourModel.setAlpha(alpha);
 
 
+    ofstream outputMetricsFile;
+    ofstream timesFile;
+    ofstream outputPredictionsFile;
+
     if(outputMetricsFileName != "") {
-        ofstream outputMetricsFile;
         outputMetricsFile.open(outputMetricsFileName, std::ios_base::app);
-        ourModel.setMetricsFile(outputMetricsFile);
+        ourModel.setMetricsFile(&outputMetricsFile);
+    }
+    if(timeFileName  != "") {
+        timesFile.open(timeFileName, std::ios_base::app);
+        ourModel.setTimesFile(&timesFile);
     }
 
-    if(outputTimesFileName != "") {
-        ofstream outputTimesFile;
-        outputTimesFile.open(outputTimesFileName, std::ios_base::app);
-        ourModel.setTimesFile(outputTimesFile);
-    }
+
+
+    outputPredictionsFile.open(outputPredictionsFileName);
+    ourModel.setOutputFile(&outputPredictionsFile);
 
 
     ourModel.train(trainSetName);

@@ -14,9 +14,13 @@
 #include <algorithm>
 #include <cmath>
 #include <map>
+#include <chrono>
 
 
 using namespace std;
+using namespace std::chrono;
+
+typedef high_resolution_clock::time_point timeType;
 
 typedef enum {
     SIMPLEKNN = 0,
@@ -52,11 +56,11 @@ public:
 
     void setK(int i);
 
-    void setOutputFile(ofstream&);
+    void setOutputFile(ofstream*);
 
-    void setTimesFile(ofstream&);
+    void setTimesFile(ofstream*);
 
-    void setMetricsFile(ofstream&);
+    void setMetricsFile(ofstream*);
 
     void evaluate(const char * string);
 
@@ -64,7 +68,7 @@ public:
 
     void outputResults();
 
-    matrix<double> calculateCovarianceMatrix(const Dataset<vector<double>> &X);
+    matrix<double> calculateCovarianceMatrix(const matrix<double> &X);
 
 private:
     MODE mode;
@@ -105,15 +109,17 @@ private:
 
     ofstream* outputFile;
 
-    bool measuringTimes;
     ofstream* timesFile;
+    bool measuringTimes;
 
     ofstream* metricsFile;
     bool measuringMetrics;
 
-    template <typename T>
-    void analyzePredictions(vector<int> rawPredictions, Dataset<T> testSet);
+    vector<int> rawPredictions;
 
+
+    template <typename T>
+    void analyzePredictions(Dataset<T> testSet);
 
     double averageAccurracy ;
     double averageRecall ;
@@ -121,7 +127,14 @@ private:
     double averageF1;
 
 
+    timeType startTraining;
+    timeType endTraining;
 
+    timeType startEvaluate;
+    timeType endEvaluate;
+
+
+    matrix<double> traspose(matrix<double> vector);
 };
 
 

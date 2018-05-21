@@ -23,8 +23,8 @@ void Model::evaluate(const char *testDatasetName) {
     Dataset<uchar *> testSet;
     loadDataset(testDatasetName, &testSet);
 
-    vector<int> rawPredictions;
     assert(_k <= images.size());
+
 
     if (mode == PCAWITHKNN) {
         Dataset<vector<double>> normalizedTestSet;
@@ -36,28 +36,34 @@ void Model::evaluate(const char *testDatasetName) {
         assert(reducedTestSet.size() == normalizedTestSet.size());
         assert(reducedTestSet[0].first.size() == reducedDataset[0].first.size());
 
+        startEvaluate = high_resolution_clock::now();
         for (int i = 0; i < reducedTestSet.size(); ++i) {
             rawPredictions.push_back(kNearestNeighbors(reducedDataset, reducedTestSet[i].first));
 //            cout << rawPredictions[i] << " ";
         }
+        endEvaluate = high_resolution_clock::now();
+
 //        cout << endl;
 
 
     } else {
+        startEvaluate = high_resolution_clock::now();
         for (int i = 0; i < testSet.size(); ++i) {
             rawPredictions.push_back(kNearestNeighbors(images, testSet[i].first));
 //            cout << rawPredictions[i] << " ";
         }
+        endEvaluate = high_resolution_clock::now();
 //        cout << endl;
     }
 
-    analyzePredictions(rawPredictions, testSet);
+    analyzePredictions(testSet);
 }
 
 
 void Model::train(const char *trainDatasetName) {
     loadDataset(trainDatasetName, &images);
 
+    startTraining = high_resolution_clock::now();
     if (mode == PCAWITHKNN) {
         //Params: Dataset destination, Dataset src
         setAveragePixelsVector(images);
@@ -72,6 +78,9 @@ void Model::train(const char *trainDatasetName) {
         //matrix<double> covariance = calculateCovarianceMatrix(reducedDataset);
         //Tendria que dar diagonal?
     }
+    endTraining = high_resolution_clock::now();
+
+
 }
 
 template<typename X>
@@ -153,7 +162,7 @@ void Model::loadDataset(const char *trainDatasetName, Dataset<uchar *> *dest) {
 
 
 template<typename T, typename X>
-int Model::kNearestNeighbors(const Dataset<X>& datasetToValidateAgainst, T newImage) {
+int Model::kNearestNeighbors(const Dataset<X> &datasetToValidateAgainst, T newImage) {
     vector<pair<double, int> > distances;
 
     int size;
@@ -217,13 +226,14 @@ bool pairCompare(pair<int, int> i, pair<int, int> j) {
     return (i.first < j.first);
 }
 
-matrix<double> Model::calculateCovarianceMatrix(const Dataset<vector<double>> &X) {
+matrix<double> Model::calculateCovarianceMatrix(const matrix<double> &X) {
 
-    matrix<double> normalizedX = datasetToMatrix(X);
+//    matrix<double> normalizedX = datasetToMatrix(X);
 
 //    printMatrix(normalizedX);
 
-    matrix<double> covarianceMatrix = transposeAndMultiplyWithItself(normalizedX);
+    //DEVUELVE XX^t
+    matrix<double> covarianceMatrix = transposeAndMultiplyWithItself(X);
 
     return covarianceMatrix;
 }
@@ -231,13 +241,15 @@ matrix<double> Model::calculateCovarianceMatrix(const Dataset<vector<double>> &X
 
 template<typename T>
 matrix<T> transposeAndMultiplyWithItself(const matrix<T> &A) {
-    matrix<double> ret(A[0].size(), vector<double>(A[0].size(), 0));
+    matrix<double> ret(A.size(), vector<double>(A.size(), 0));
 
-    for (int i = 0; i < A[0].size(); ++i) {
-        for (int j = 0; j < A[0].size(); ++j) {
-            for (int k = 0; k < A.size(); ++k) {
+
+
+    for (int i = 0; i < A.size(); ++i) {
+        for (int j = 0; j < A.size(); ++j) {
+            for (int k = 0; k < A[0].size(); ++k) {
                 //CHEQUEAR ESTO A VER SI ESTA BIEN
-                ret[i][j] += A[k][i] * A[k][j];
+                ret[i][j] += A[i][k] * A[j][k];
             }
         }
     }
@@ -253,13 +265,15 @@ void Model::getTC(const Dataset<T> &src) {
     vector<pair<vector<double>, double>> eigenVectorsAndValues;
 
 
-    matrix<double> currentMatrix = calculateCovarianceMatrix(src);
+    matrix<double> X = datasetToMatrix(src);
+    matrix<double> currentMatrix = calculateCovarianceMatrix(X);
+    matrix<double> Xt = traspose(X);
+
 
     for (int i = 0; i < _alpha; ++i) {
 //        cout << "Calculating eigenvector: " << i + 1 << "/" << _alpha << endl;
         pair<vector<double>, double> currentEigenVectorsAndValues = powerMethod(currentMatrix);
 
-        eigenVectorsAndValues.push_back(currentEigenVectorsAndValues);
 
         //DEFLACION:
         matrix<double> vvt = vectorOuterProduct(currentEigenVectorsAndValues.first);
@@ -269,6 +283,14 @@ void Model::getTC(const Dataset<T> &src) {
         vvt = matrixScalarMultiply(vvt, (double) -1);
 
         currentMatrix = addMatrices(currentMatrix, vvt);
+
+
+        //Tenemos los autovectores de la M que era de dimensiones pequeñas
+        //Para conseguir los autovectores de la M grande, multiplicamos a izquierda por X^t
+
+        currentEigenVectorsAndValues.first = matrixVectorMultiply(Xt,currentEigenVectorsAndValues.first);
+
+        eigenVectorsAndValues.push_back(currentEigenVectorsAndValues);
 
 //        cout << "root of the eigenvalue that should match the tests: " << sqrt(currentEigenVectorsAndValues.second)
 //             << endl;
@@ -327,17 +349,17 @@ void Model::printMatrix(T A) {
 
 }
 
-void Model::setOutputFile(ofstream &oFile) {
-    outputFile = &oFile;
+void Model::setOutputFile(ofstream *oFile) {
+    outputFile = oFile;
 }
 
-void Model::setTimesFile(ofstream &tFile) {
-    outputFile = &tFile;
+void Model::setTimesFile(ofstream *tFile) {
+    timesFile = tFile;
     measuringTimes = true;
 }
 
-void Model::setMetricsFile(ofstream & mFile) {
-    metricsFile = &mFile;
+void Model::setMetricsFile(ofstream *mFile) {
+    metricsFile = mFile;
     measuringMetrics = true;
 }
 
@@ -353,7 +375,7 @@ pair<vector<double>, double> powerMethod(const matrix<double> &mat) {
         vector<double> newV = matrixVectorMultiply(mat, v);
         newV = normalizeVector(newV);
 
-        if (getSquaredNorm(newV, v, v.size()) < 10e-7 || niter > 250  ) {
+        if (getSquaredNorm(newV, v, v.size()) < 10e-7 || niter > 250) {
             break;
         }
         v = newV;
@@ -371,7 +393,7 @@ pair<vector<double>, double> powerMethod(const matrix<double> &mat) {
 }
 
 template<typename T>
-vector<T> normalizeVector(vector<T>& v) {
+vector<T> normalizeVector(vector<T> &v) {
     double sum = 0;
     for (int i = 0; i < v.size(); ++i) {
         sum += pow(v[i], 2);
@@ -398,7 +420,7 @@ vector<double> matrixVectorMultiply(const matrix<double> &m1, const vector<doubl
 }
 
 
-double vectorVectorMultiply(const vector<double>& v1, const vector<double>& v2) {
+double vectorVectorMultiply(const vector<double> &v1, const vector<double> &v2) {
     assert(v1.size() == v2.size());
     double sum = 0;
     for (int i = 0; i < v1.size(); ++i) {
@@ -408,7 +430,7 @@ double vectorVectorMultiply(const vector<double>& v1, const vector<double>& v2) 
 }
 
 template<typename T>
-matrix<T> vectorOuterProduct(const vector<T>& v) {
+matrix<T> vectorOuterProduct(const vector<T> &v) {
     matrix<T> ret(v.size(), vector<T>(v.size(), 0));
     for (int i = 0; i < v.size(); ++i) {
         for (int j = 0; j < v.size(); ++j) {
@@ -434,7 +456,7 @@ matrix<T> matrixScalarMultiply(const matrix<T> &m, T s) {
 }
 
 template<typename T>
-matrix<T> addMatrices(const matrix<T>& A, const matrix<T>& B) {
+matrix<T> addMatrices(const matrix<T> &A, const matrix<T> &B) {
 
     assert(A.size() == B.size());
     assert(A[0].size() == B[0].size());
@@ -451,7 +473,7 @@ matrix<T> addMatrices(const matrix<T>& A, const matrix<T>& B) {
 }
 
 template<typename T>
-void Model::analyzePredictions(vector<int> rawPredictions, Dataset<T> testSet) {
+void Model::analyzePredictions(Dataset<T> testSet) {
     //Need to get true/false positives/negatives
 
     map<int, metric> classMetrics;
@@ -514,20 +536,22 @@ void Model::analyzePredictions(vector<int> rawPredictions, Dataset<T> testSet) {
                                   (double) (currentMetric.tp + currentMetric.tn + currentMetric.fn + currentMetric.fp);
 
 
-        currentMetric.precision =(currentMetric.tp + currentMetric.fp) == 0? 1 : (double) (currentMetric.tp) /
-                                  (double) (currentMetric.tp + currentMetric.fp);
+        currentMetric.precision = (currentMetric.tp + currentMetric.fp) == 0 ? 1 : (double) (currentMetric.tp) /
+                                                                                   (double) (currentMetric.tp +
+                                                                                             currentMetric.fp);
 
-        currentMetric.recall = (currentMetric.tp + currentMetric.fn) ==0 ? 1 : (double) (currentMetric.tp) /
-                               (double) (currentMetric.tp + currentMetric.fn);
+        currentMetric.recall = (currentMetric.tp + currentMetric.fn) == 0 ? 1 : (double) (currentMetric.tp) /
+                                                                                (double) (currentMetric.tp +
+                                                                                          currentMetric.fn);
 
-        currentMetric.f1 = (currentMetric.precision + currentMetric.recall) == 0 ? 1 : ((currentMetric.precision * currentMetric.recall) /
+        currentMetric.f1 = (currentMetric.precision + currentMetric.recall) == 0 ? 1 : (
+                (currentMetric.precision * currentMetric.recall) /
                 (currentMetric.precision + currentMetric.recall));
 
         classMetrics[i] = currentMetric;
 
 
-
-        cout << currentMetric.precision << ";" << currentMetric.recall << ";" << currentMetric.f1 << endl;
+//        cout << currentMetric.precision << ";" << currentMetric.recall << ";" << currentMetric.f1 << endl;
     }
 
 
@@ -537,11 +561,11 @@ void Model::analyzePredictions(vector<int> rawPredictions, Dataset<T> testSet) {
     averageF1 = 0;
 
     for (int l = 0; l < classMetrics.size(); ++l) {
-        int i = l+1;
-        averageAccurracy  += classMetrics[i].accurracy;
-        averagePrecision  += classMetrics[i].precision;
-        averageRecall  += classMetrics[i].recall;
-        averageF1  += classMetrics[i].f1;
+        int i = l + 1;
+        averageAccurracy += classMetrics[i].accurracy;
+        averagePrecision += classMetrics[i].precision;
+        averageRecall += classMetrics[i].recall;
+        averageF1 += classMetrics[i].f1;
     }
 
     averageAccurracy /= classMetrics.size();
@@ -553,10 +577,38 @@ void Model::analyzePredictions(vector<int> rawPredictions, Dataset<T> testSet) {
 }
 
 void Model::outputResults() {
-    *metricsFile << _k << ";" << _alpha << ";"<< averageAccurracy << ";"<< averagePrecision << ";"<< averageRecall<< ";"<< averageF1 << endl;
+    if (measuringMetrics) {
+        *metricsFile << _k << ";" << _alpha << ";" << averageAccurracy << ";" << averagePrecision << ";"
+                     << averageRecall << ";" << averageF1 << endl;
+    }
 
 
+    if (measuringTimes) {
 
+
+        duration<double> elapsedTraining = duration_cast<duration<double>>(endTraining - startTraining);
+        duration<double> elapsedEvaluate = duration_cast<duration<double>>(endEvaluate - startEvaluate);
+
+        *timesFile << mode << ";" << _k << ";" << _alpha << ";" << elapsedTraining.count() << ";"
+                   << elapsedEvaluate.count() << endl;
+    }
+
+//
+    for (int i = 0; i < rawPredictions.size(); ++i) {
+        *outputFile << rawPredictions[i] << "," << endl;
+    }
+
+
+}
+
+matrix<double> Model::traspose(matrix<double> X) {
+    matrix<double> Xt(X[0].size(), vector<double>(X.size(), 0));
+    for (int i = 0; i < X.size(); ++i) {
+        for (int j = 0; j < X[0].size(); ++j) {
+            Xt[j][i] = X[i][j];
+        }
+    }
+    return Xt;
 }
 
 
