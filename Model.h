@@ -52,6 +52,12 @@ public:
 
     void setK(int i);
 
+    void setOutputFile(ofstream&);
+
+    void setTimesFile(ofstream&);
+
+    void setMetricsFile(ofstream&);
+
     void evaluate(const char * string);
 
     void train(const char * string);
@@ -59,8 +65,6 @@ public:
     void outputResults();
 
     matrix<double> calculateCovarianceMatrix(const Dataset<vector<double>> &X);
-
-    void setOutputFile(ofstream&);
 
 private:
     MODE mode;
@@ -101,6 +105,12 @@ private:
 
     ofstream* outputFile;
 
+    bool measuringTimes;
+    ofstream* timesFile;
+
+    ofstream* metricsFile;
+    bool measuringMetrics;
+
     template <typename T>
     void analyzePredictions(vector<int> rawPredictions, Dataset<T> testSet);
 
@@ -109,6 +119,8 @@ private:
     double averageRecall ;
     double averagePrecision ;
     double averageF1;
+
+
 
 };
 

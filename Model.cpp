@@ -5,7 +5,7 @@
 #include "Model.h"
 #include "utils.h"
 
-Model::Model(MODE mode) : mode(mode) {
+Model::Model(MODE mode) : mode(mode), measuringMetrics(false), measuringTimes(false) {
 
 }
 
@@ -40,7 +40,7 @@ void Model::evaluate(const char *testDatasetName) {
             rawPredictions.push_back(kNearestNeighbors(reducedDataset, reducedTestSet[i].first));
 //            cout << rawPredictions[i] << " ";
         }
-        cout << endl;
+//        cout << endl;
 
 
     } else {
@@ -48,7 +48,7 @@ void Model::evaluate(const char *testDatasetName) {
             rawPredictions.push_back(kNearestNeighbors(images, testSet[i].first));
 //            cout << rawPredictions[i] << " ";
         }
-        cout << endl;
+//        cout << endl;
     }
 
     analyzePredictions(rawPredictions, testSet);
@@ -256,7 +256,7 @@ void Model::getTC(const Dataset<T> &src) {
     matrix<double> currentMatrix = calculateCovarianceMatrix(src);
 
     for (int i = 0; i < _alpha; ++i) {
-        cout << "Calculating eigenvector: " << i + 1 << "/" << _alpha << endl;
+//        cout << "Calculating eigenvector: " << i + 1 << "/" << _alpha << endl;
         pair<vector<double>, double> currentEigenVectorsAndValues = powerMethod(currentMatrix);
 
         eigenVectorsAndValues.push_back(currentEigenVectorsAndValues);
@@ -270,8 +270,8 @@ void Model::getTC(const Dataset<T> &src) {
 
         currentMatrix = addMatrices(currentMatrix, vvt);
 
-        cout << "root of the eigenvalue that should match the tests: " << sqrt(currentEigenVectorsAndValues.second)
-             << endl;
+//        cout << "root of the eigenvalue that should match the tests: " << sqrt(currentEigenVectorsAndValues.second)
+//             << endl;
     }
 
 
@@ -331,6 +331,16 @@ void Model::setOutputFile(ofstream &oFile) {
     outputFile = &oFile;
 }
 
+void Model::setTimesFile(ofstream &tFile) {
+    outputFile = &tFile;
+    measuringTimes = true;
+}
+
+void Model::setMetricsFile(ofstream & mFile) {
+    metricsFile = &mFile;
+    measuringMetrics = true;
+}
+
 pair<vector<double>, double> powerMethod(const matrix<double> &mat) {
     vector<double> v(mat[0].size(), 1);
 
@@ -338,15 +348,16 @@ pair<vector<double>, double> powerMethod(const matrix<double> &mat) {
 
     assert(mat.size() == mat[0].size());
 
-    int niter = 5000;
+    int niter = 0;
     while (true) {
         vector<double> newV = matrixVectorMultiply(mat, v);
         newV = normalizeVector(newV);
 
-        if (getSquaredNorm(newV, v, v.size()) < 10e-7) {
+        if (getSquaredNorm(newV, v, v.size()) < 10e-7 || niter > 250  ) {
             break;
         }
         v = newV;
+        niter++;
     }
 
     double vBv = (vectorVectorMultiply(v, matrixVectorMultiply(mat, v)));
@@ -473,7 +484,7 @@ void Model::analyzePredictions(vector<int> rawPredictions, Dataset<T> testSet) {
         assert(real != 0);
         assert(predicted != 0);
 
-        cout << "predicted: " << predicted << " should have been: " << real << endl;
+//        cout << "predicted: " << predicted << " should have been: " << real << endl;
         if (real == predicted) {
             assert(classMetrics[real].realClass == real);
             classMetrics[real].tp += 1;
@@ -509,11 +520,14 @@ void Model::analyzePredictions(vector<int> rawPredictions, Dataset<T> testSet) {
         currentMetric.recall = (currentMetric.tp + currentMetric.fn) ==0 ? 1 : (double) (currentMetric.tp) /
                                (double) (currentMetric.tp + currentMetric.fn);
 
-        currentMetric.f1 = currentMetric.precision + currentMetric.recall == 0 ? 1 : ((currentMetric.precision * currentMetric.recall) /
+        currentMetric.f1 = (currentMetric.precision + currentMetric.recall) == 0 ? 1 : ((currentMetric.precision * currentMetric.recall) /
                 (currentMetric.precision + currentMetric.recall));
 
         classMetrics[i] = currentMetric;
 
+
+
+        cout << currentMetric.precision << ";" << currentMetric.recall << ";" << currentMetric.f1 << endl;
     }
 
 
@@ -539,7 +553,10 @@ void Model::analyzePredictions(vector<int> rawPredictions, Dataset<T> testSet) {
 }
 
 void Model::outputResults() {
-    *outputFile << _k << ";" << _alpha << ";"<< averageAccurracy << ";"<< averagePrecision << ";"<< averageRecall<< ";"<< averageF1 << endl;
+    *metricsFile << _k << ";" << _alpha << ";"<< averageAccurracy << ";"<< averagePrecision << ";"<< averageRecall<< ";"<< averageF1 << endl;
+
+
+
 }
 
 

@@ -17,7 +17,7 @@ char *getCmdOption(char **begin, char **end, const string &option) {
     if (itr != end && ++itr != end) {
         return *itr;
     }
-    return 0;
+    return "";
 }
 
 bool cmdOptionExists(char **begin, char **end, const string &option) {
@@ -55,26 +55,46 @@ int main(int argc, char *argv[]) {
 
     char *testSetName = getCmdOption(argv, argv + argc, "-q");
 
-    char *outputPreditionsFileName = getCmdOption(argv, argv + argc, "-o");
 
-    ofstream outputFile;
+    char *alphaStr = getCmdOption(argv, argv + argc, "-alpha");
 
-    outputFile.open(outputPreditionsFileName);
+    char *kStr = getCmdOption(argv, argv + argc, "-k");
+
+    int k = kStr == "" ? 10 : stoi(kStr);
+
+    int alpha = alphaStr == "" ? 15 : stoi(alphaStr);
+
+    char *outputMetricsFileName = getCmdOption(argv, argv + argc, "-metrics");
+
+    char *outputTimesFileName = getCmdOption(argv, argv + argc, "-time");
+
+    char *outputPredictionsFileName = getCmdOption(argv, argv + argc, "-o");
 
 
-    //Creamos una instancia de nuestra clase model y la instanciamos en modo SIMPLEKNN
-    //Puede ser eso o PCAWITHKNN
+
+
     MODE mod;
     if (stoi(method) == 1) { mod = PCAWITHKNN; }
     else              { mod = SIMPLEKNN; }
 
     Model ourModel(mod);
 
-    ourModel.setK(10);
-    ourModel.setAlpha(15);
-    ourModel.setOutputFile(outputFile);
+    ourModel.setK(k);
+    ourModel.setAlpha(alpha);
 
-//    Le pasamos la direccion al dataset de training
+
+    if(outputMetricsFileName != "") {
+        ofstream outputMetricsFile;
+        outputMetricsFile.open(outputMetricsFileName, std::ios_base::app);
+        ourModel.setMetricsFile(outputMetricsFile);
+    }
+
+    if(outputTimesFileName != "") {
+        ofstream outputTimesFile;
+        outputTimesFile.open(outputTimesFileName, std::ios_base::app);
+        ourModel.setTimesFile(outputTimesFile);
+    }
+
 
     ourModel.train(trainSetName);
 
