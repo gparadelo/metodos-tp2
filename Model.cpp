@@ -218,7 +218,7 @@ double getSquaredNorm(const T &v1, const T &v2, int size) {
     for (int i = 0; i < size; ++i) {
         distance += pow((double) v1[i] - (double) v2[i], 2);
     }
-    return distance;
+    return sqrt(distance);
 }
 
 
