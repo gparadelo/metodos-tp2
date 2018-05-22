@@ -545,7 +545,7 @@ void Model::analyzePredictions(Dataset<T> testSet) {
                                                                                           currentMetric.fn);
 
         currentMetric.f1 = (currentMetric.precision + currentMetric.recall) == 0 ? 1 : (
-                (currentMetric.precision * currentMetric.recall) /
+                2 * (currentMetric.precision * currentMetric.recall) /
                 (currentMetric.precision + currentMetric.recall));
 
         classMetrics[i] = currentMetric;

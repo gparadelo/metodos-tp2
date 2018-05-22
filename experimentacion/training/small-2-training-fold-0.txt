@@ -1,0 +1,3 @@
+../ImagenesCaras/s1/3.pgm, 1,
+../ImagenesCaras/s1/4.pgm, 1,
+../ImagenesCaras/s1/5.pgm, 1,
