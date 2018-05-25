@@ -584,6 +584,8 @@ void Model::outputResults() {
 
     cout << "***************Resultados***************" << endl<< "Accuracy promedio: "<< averageAccurracy << endl << "Precision promedio: " << averagePrecision << endl <<"Recall promedio: " << averageRecall << endl << "F1 promedio: " << averageF1 << endl << "****************************************" << endl;
 
+    cout<< "Se utilizó:" << endl << "k: " << _k << endl << "alpha: " << _alpha << endl;
+
 
     if (measuringTimes) {
 
