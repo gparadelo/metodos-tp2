@@ -74,9 +74,6 @@ void Model::train(const char *trainDatasetName) {
         getTC(normalizedDataset);
         //Signature meaning: destination, source
         applyTCToDataset(reducedDataset, normalizedDataset);
-
-        //matrix<double> covariance = calculateCovarianceMatrix(reducedDataset);
-        //Tendria que dar diagonal?
     }
     endTraining = high_resolution_clock::now();
 
@@ -140,7 +137,7 @@ void Model::loadDataset(const char *trainDatasetName, Dataset<uchar *> *dest) {
             throw std::runtime_error("test_load failed");
         }
 
-        _width = width;//hace esto para cada imagen, si bien todas tiene el mismo tamaño ¿se puede evitar?
+        _width = width;
         _height = height;
 
         int intClass = -1;
@@ -247,7 +244,6 @@ matrix<T> transposeAndMultiplyWithItself(const matrix<T> &A) {
     for (int i = 0; i < A.size(); ++i) {
         for (int j = 0; j < A.size(); ++j) {
             for (int k = 0; k < A[0].size(); ++k) {
-                //CHEQUEAR ESTO A VER SI ESTA BIEN
                 ret[i][j] += A[i][k] * A[j][k];
             }
         }
@@ -291,8 +287,7 @@ void Model::getTC(const Dataset<T> &src) {
 
         eigenVectorsAndValues.push_back(currentEigenVectorsAndValues);
 
-        cout << "Root of the eigenvalue: " << sqrt(currentEigenVectorsAndValues.second)
-             << endl;
+        cout << "Root of the eigenvalue: " << sqrt(currentEigenVectorsAndValues.second) << endl;
     }
 
 
@@ -474,7 +469,6 @@ matrix<T> addMatrices(const matrix<T> &A, const matrix<T> &B) {
 template<typename T>
 void Model::analyzePredictions(Dataset<T> testSet) {
     //Need to get true/false positives/negatives
-
 
     //Init
     for (int i = 0; i < images.size(); ++i) {

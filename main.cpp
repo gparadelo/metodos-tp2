@@ -10,8 +10,6 @@ using namespace std;
 using namespace std::chrono;
 
 
-
-//Mover a utils?
 char *getCmdOption(char **begin, char **end, const string &option) {
     char **itr = std::find(begin, end, option);
     if (itr != end && ++itr != end) {
@@ -23,7 +21,6 @@ char *getCmdOption(char **begin, char **end, const string &option) {
 bool cmdOptionExists(char **begin, char **end, const string &option) {
     return std::find(begin, end, option) != end;
 }
-//Gracias stackoverflow
 
 
 int main(int argc, char *argv[]) {
@@ -43,7 +40,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    char *method = getCmdOption(argv,argv + argc, "-m");
+    char *method = getCmdOption(argv, argv + argc, "-m");
 
     char *trainSetName = getCmdOption(argv, argv + argc, "-i");
 
@@ -65,10 +62,9 @@ int main(int argc, char *argv[]) {
     char *outputPredictionsFileName = getCmdOption(argv, argv + argc, "-o");
 
 
-
     MODE mod;
     if (stoi(method) == 1) { mod = PCAWITHKNN; }
-    else              { mod = SIMPLEKNN; }
+    else { mod = SIMPLEKNN; }
 
     Model ourModel(mod);
 
@@ -80,15 +76,14 @@ int main(int argc, char *argv[]) {
     ofstream timesFile;
     ofstream outputPredictionsFile;
 
-    if(outputMetricsFileName != "") {
+    if (outputMetricsFileName != "") {
         outputMetricsFile.open(outputMetricsFileName, std::ios_base::app);
         ourModel.setMetricsFile(&outputMetricsFile);
     }
-    if(timeFileName  != "") {
+    if (timeFileName != "") {
         timesFile.open(timeFileName, std::ios_base::app);
         ourModel.setTimesFile(&timesFile);
     }
-
 
 
     outputPredictionsFile.open(outputPredictionsFileName);
@@ -108,12 +103,4 @@ int main(int argc, char *argv[]) {
 
 
     return 0;
-
-    //ESTO ES CODIGO DEL TP PASADO QUE ME AYUDA A SABER COMO CARGAR ARCHIVOS PARA LEER Y ESCRIBIR
-//    ifstream input(argv[1]);
-//    ofstream resultsFile;
-//    ofstream timeFile;
-//    resultsFile.open("../experimentacion/results/results.out");
-//    timeFile.open("../experimentacion/results/time",std::ios_base::app);
 }
-
