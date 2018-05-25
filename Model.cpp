@@ -133,7 +133,7 @@ void Model::loadDataset(const char *trainDatasetName, Dataset<uchar *> *dest) {
         PPM_LOADER_PIXEL_TYPE pt = PPM_LOADER_PIXEL_TYPE_INVALID;
         char filename[256] = {0};
         input.getline(filename, 256, ',');
-
+        testFileNamesForOutput.push_back(filename);
         bool ret = LoadPPMFile(&data, &width, &height, &pt, filename);
 
         if (!ret || width == 0 || height == 0 || pt != PPM_LOADER_PIXEL_TYPE_GRAY_8B) {
@@ -244,7 +244,6 @@ matrix<T> transposeAndMultiplyWithItself(const matrix<T> &A) {
     matrix<double> ret(A.size(), vector<double>(A.size(), 0));
 
 
-
     for (int i = 0; i < A.size(); ++i) {
         for (int j = 0; j < A.size(); ++j) {
             for (int k = 0; k < A[0].size(); ++k) {
@@ -288,7 +287,7 @@ void Model::getTC(const Dataset<T> &src) {
         //Tenemos los autovectores de la M que era de dimensiones pequeñas
         //Para conseguir los autovectores de la M grande, multiplicamos a izquierda por X^t
 
-        currentEigenVectorsAndValues.first = matrixVectorMultiply(Xt,currentEigenVectorsAndValues.first);
+        currentEigenVectorsAndValues.first = matrixVectorMultiply(Xt, currentEigenVectorsAndValues.first);
 
         eigenVectorsAndValues.push_back(currentEigenVectorsAndValues);
 
@@ -476,7 +475,6 @@ template<typename T>
 void Model::analyzePredictions(Dataset<T> testSet) {
     //Need to get true/false positives/negatives
 
-    map<int, metric> classMetrics;
 
     //Init
     for (int i = 0; i < images.size(); ++i) {
@@ -582,9 +580,24 @@ void Model::outputResults() {
                      << averageRecall << ";" << averageF1 << endl;
     }
 
-    cout << "***************Resultados***************" << endl<< "Accuracy promedio: "<< averageAccurracy << endl << "Precision promedio: " << averagePrecision << endl <<"Recall promedio: " << averageRecall << endl << "F1 promedio: " << averageF1 << endl << "****************************************" << endl;
 
-    cout<< "Se utilizó:" << endl << "k: " << _k << endl << "alpha: " << _alpha << endl;
+    for (int j = 0; j < classMetrics.size(); ++j) {
+        int i = j + 1;
+        metric currentMetric = classMetrics[i];
+        cout<<"****************************************" << endl;
+        cout << "Para la clase: " << i << endl;
+        cout << "Accuracy : " << currentMetric.accurracy << endl << "Precision : " << currentMetric.precision << endl
+             << "Recall : " << currentMetric.recall << endl << "F1: " << currentMetric.f1 << endl
+             << "****************************************" << endl;
+
+    }
+
+
+    cout << "***************Resultados***************" << endl << "Accuracy promedio: " << averageAccurracy << endl
+         << "Precision promedio: " << averagePrecision << endl << "Recall promedio: " << averageRecall << endl
+         << "F1 promedio: " << averageF1 << endl << "****************************************" << endl;
+
+    cout << "Se utilizó:" << endl << "k: " << _k << endl << "alpha: " << _alpha << endl;
 
 
     if (measuringTimes) {
@@ -599,7 +612,7 @@ void Model::outputResults() {
 
 //
     for (int i = 0; i < rawPredictions.size(); ++i) {
-        *outputFile << rawPredictions[i] << "," << endl;
+        *outputFile << testFileNamesForOutput[i] << "," << rawPredictions[i] << "," << endl;
     }
 
 

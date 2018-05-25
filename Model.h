@@ -135,6 +135,10 @@ private:
 
 
     matrix<double> traspose(matrix<double> vector);
+
+    vector<string> testFileNamesForOutput;
+    map<int, metric> classMetrics;
+
 };
 
 
