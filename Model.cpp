@@ -271,7 +271,7 @@ void Model::getTC(const Dataset<T> &src) {
 
 
     for (int i = 0; i < _alpha; ++i) {
-//        cout << "Calculating eigenvector: " << i + 1 << "/" << _alpha << endl;
+        cout << "Calculating eigenvector: " << i + 1 << "/" << _alpha << endl;
         pair<vector<double>, double> currentEigenVectorsAndValues = powerMethod(currentMatrix);
 
 
@@ -292,8 +292,8 @@ void Model::getTC(const Dataset<T> &src) {
 
         eigenVectorsAndValues.push_back(currentEigenVectorsAndValues);
 
-//        cout << "root of the eigenvalue that should match the tests: " << sqrt(currentEigenVectorsAndValues.second)
-//             << endl;
+        cout << "Root of the eigenvalue: " << sqrt(currentEigenVectorsAndValues.second)
+             << endl;
     }
 
 
@@ -581,6 +581,8 @@ void Model::outputResults() {
         *metricsFile << _k << ";" << _alpha << ";" << averageAccurracy << ";" << averagePrecision << ";"
                      << averageRecall << ";" << averageF1 << endl;
     }
+
+    cout << "***************Resultados***************" << endl<< "Accuracy promedio: "<< averageAccurracy << endl << "Precision promedio: " << averagePrecision << endl <<"Recall promedio: " << averageRecall << endl << "F1 promedio: " << averageF1 << endl << "****************************************" << endl;
 
 
     if (measuringTimes) {
